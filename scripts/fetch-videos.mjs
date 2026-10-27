@@ -125,7 +125,10 @@ async function fetchWithoutKey() {
       const l = o.lockupViewModel;
       if (l?.contentType === "LOCKUP_CONTENT_TYPE_VIDEO" && l.contentId && !seen.has(l.contentId)) {
         seen.add(l.contentId);
-        listed.push({ id: l.contentId, title: l.metadata?.lockupMetadataViewModel?.title?.content || "" });
+        let badge = "";
+        walk(l.contentImage, (b) => { if (!badge && /^\d+(:\d+)+$/.test(b.thumbnailBadgeViewModel?.text || "")) badge = b.thumbnailBadgeViewModel.text; });
+        const durationSeconds = badge ? badge.split(":").reduce((a, n) => a * 60 + Number(n), 0) : 0;
+        listed.push({ id: l.contentId, title: l.metadata?.lockupMetadataViewModel?.title?.content || "", durationSeconds });
       }
       const pv = o.playlistVideoRenderer; // older response shape
       if (pv?.videoId && !seen.has(pv.videoId)) {
@@ -138,6 +141,17 @@ async function fetchWithoutKey() {
     data = await yti("browse", { continuation: token });
   }
   log(`found ${listed.length} uploads`);
+
+  // The channel RSS feed (latest 15) is a fallback when YouTube blocks detail lookups, which happens on cloud IPs.
+  const rss = new Map();
+  try {
+    const xml = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${config.channelId}`).then((r) => r.text());
+    for (const entry of xml.split("<entry>").slice(1)) {
+      const tag = (t) => decode(entry.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.[1] || "");
+      const id = tag("yt:videoId");
+      if (id) rss.set(id, { title: tag("title"), publishedAt: tag("published"), description: tag("media:description"), viewCount: Number(entry.match(/views="(\d+)"/)?.[1] || 0) });
+    }
+  } catch {}
 
   // Details are fetched for new videos, plus the 25 newest so edits to recent titles/descriptions show up.
   const refresh = new Set(listed.slice(0, 25).map((v) => v.id));
@@ -162,7 +176,18 @@ async function fetchWithoutKey() {
       };
     } catch (e) {
       failures++;
-      return cached || { id: item.id, title: item.title, description: "", publishedAt: null, durationSeconds: 0, viewCount: 0, keywords: [] };
+      if (cached?.description) return cached;
+      const r = rss.get(item.id) || {};
+      // Missing details are retried on every run until a lookup or the RSS feed fills them in.
+      return {
+        keywords: [], ...cached,
+        id: item.id,
+        title: r.title || cached?.title || item.title,
+        description: r.description || cached?.description || "",
+        publishedAt: r.publishedAt || cached?.publishedAt || new Date().toISOString(), // new upload: first seen now
+        durationSeconds: cached?.durationSeconds || item.durationSeconds || 0,
+        viewCount: r.viewCount || cached?.viewCount || 0,
+      };
     }
   });
   if (failures) log(`${failures} detail lookups failed (kept cached/basic info)`);
