@@ -1,0 +1,104 @@
+{
+  "_help": "Each video is matched against every category's 'match' pattern (case-insensitive regex on the title). A video can appear in several categories; its first match is its main category. Edit freely, then rebuild. 'pin' and 'exclude' take video ids to force a video in or out of a category.",
+  "categories": [
+    {
+      "slug": "shorts",
+      "name": "Shorts",
+      "icon": "✦",
+      "match": "#shorts",
+      "description": "Quick peeks into the soundscapes, under a minute each.",
+      "shorts": true
+    },
+    {
+      "slug": "baby-sleep-sounds",
+      "name": "Baby Sleep",
+      "icon": "👶",
+      "match": "baby|babies|womb|colic|infant|shhh",
+      "description": "Womb sounds, shushing and gentle noise to soothe fussy, colicky babies through the night."
+    },
+    {
+      "slug": "holiday-and-seasonal",
+      "name": "Holiday & Seasonal",
+      "icon": "🎄",
+      "match": "christmas|xmas|halloween|holiday",
+      "description": "Christmas carols, cozy holiday music and seasonal ambience for festive, peaceful evenings."
+    },
+    {
+      "slug": "rain-and-thunderstorms",
+      "name": "Rain & Storms",
+      "icon": "🌧",
+      "match": "\\brain|thunder|storm|hail|downpour|drizzle|raindrops",
+      "description": "Rain on tin roofs, porches, tents and car windows, with rolling thunder for deep, uninterrupted sleep."
+    },
+    {
+      "slug": "ocean-and-water",
+      "name": "Ocean & Water",
+      "icon": "🌊",
+      "match": "ocean|waves|\\bsea\\b|river|stream|brook|creek|waterfall|water|whale|fountain|harbor|lake|seagull",
+      "description": "Ocean waves, rushing rivers, babbling brooks and waterfalls: steady, flowing sound to quiet a busy mind."
+    },
+    {
+      "slug": "fireplace-and-cozy",
+      "name": "Fireplace & Cozy",
+      "icon": "🔥",
+      "match": "fire|cozy|cabin|yule",
+      "description": "Crackling fireplaces, campfires and cozy cabin nights. Warm ambience for reading, resting and winding down."
+    },
+    {
+      "slug": "nature-sounds",
+      "name": "Nature & Wildlife",
+      "icon": "🌲",
+      "match": "forest|wind|cricket|cicada|frog|bird|owl|loon|leaves|prairie|rainforest|snow|blizzard|locust|farm|nature|trees|cat purring",
+      "description": "Forests, prairie wind, crickets, frogs, birds and snowstorms, recorded to sound like you are really there."
+    },
+    {
+      "slug": "white-pink-brown-noise",
+      "name": "White, Pink & Brown Noise",
+      "icon": "〰",
+      "match": "white noise|pink noise|brown noise|grey noise|violet noise|black noise|noise cancel|\\bANC\\b|celestial white|static",
+      "description": "Smooth, consistent colored noise for masking sound, tinnitus relief, focus and better sleep."
+    },
+    {
+      "slug": "household-and-machine-sounds",
+      "name": "Fans & Machines",
+      "icon": "🌀",
+      "match": "\\bfan\\b|fan sound|fan noise|dryer|vacuum|dishwasher|washing machine|air conditioner|lawn mower|clock|airplane|train|car ride|heartbeat",
+      "description": "Fans, dryers, air conditioners, trains and airplane cabins: the everyday hums that help so many people sleep."
+    },
+    {
+      "slug": "places-and-ambience",
+      "name": "Places & Ambience",
+      "icon": "☕",
+      "match": "cafe|coffee|restaurant|library|office|city|bar crowd|bar background|casino|crowd|park sounds|spaceship|dock",
+      "description": "Coffee shops, libraries, city streets and starships. Ambient background for focus, study and work."
+    },
+    {
+      "slug": "movie-and-game-ambience",
+      "name": "Movie & Game Ambience",
+      "icon": "🎬",
+      "match": "music & ambience|ambience music|skyrim|elder scrolls|fallout|star wars|lord of the rings",
+      "description": "Soundtrack-inspired ambience from favorite films, shows and games, made for studying and focus."
+    },
+    {
+      "slug": "study-and-focus-music",
+      "name": "Study & Focus Music",
+      "icon": "🎧",
+      "match": "study|focus|lofi|lo-fi|jazz|lounge|piano|house|trip hop|chillhop|techno|electronic|\\bidm\\b|vaporwave|reading music|classical|baroque|guitar|dream pop|garage|glitch|folk|bossa|hawaiian|french|renaissance|elevator|violin|flute|harp|beach music|gamelan",
+      "description": "Lofi, jazz, piano, ambient electronic and classical music to study, read and work to."
+    },
+    {
+      "slug": "meditation-and-healing",
+      "name": "Meditation & Healing",
+      "icon": "🪷",
+      "match": "\\bhz\\b|\\d+\\s?hz|solfeggio|binaural|emdr|bilateral|meditation|zen|singing bowl|tibetan|spa\\b|worship|healing|chimes|positive energy",
+      "description": "Solfeggio frequencies, singing bowls, binaural beats and meditation music for deep calm."
+    },
+    {
+      "slug": "sleep-music",
+      "name": "Sleep Music",
+      "icon": "🌙",
+      "match": "sleep music|nap music|sleepmaxxing|lullaby|sleeping music|space sleep",
+      "description": "Soft, slow music for falling asleep, power naps and staying asleep all night."
+    }
+  ]
+}

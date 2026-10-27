@@ -1,0 +1,13 @@
+{
+  "name": "calming-audio-site",
+  "private": true,
+  "type": "module",
+  "description": "Static website for the Calming Audio YouTube channel. Pulls every upload automatically.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "fetch": "node scripts/fetch-videos.mjs",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs",
+    "update": "node scripts/fetch-videos.mjs && node scripts/build.mjs"
+  }
+}
