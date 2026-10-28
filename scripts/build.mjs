@@ -72,6 +72,24 @@ const totalHours = Math.round(videos.reduce((a, v) => a + (v.durationSeconds || 
 const firstYear = Math.min(...videos.map((v) => (v.publishedAt ? new Date(v.publishedAt).getFullYear() : 9999)));
 const uncategorized = longform.filter((v) => !v.cats.length);
 const stats = { videos: videos.length, hours: totalHours, categories: activeCats.length, since: firstYear };
+// Pages without their own image share the newest upload's thumbnail (wide, unlike the square channel avatar).
+const defaultImage = longform[0] ? thumb(longform[0].id) : data.channel?.avatar || "";
+const defaultImageAlt = longform[0]?.title || config.siteName;
+const newest = (list) => list.reduce((a, v) => (v.publishedAt > a ? v.publishedAt : a), "") || data.fetchedAt;
+// Meta descriptions use the first paragraph that is unique to the video, skipping shared
+// boilerplate ("For more sleep sounds…") and link lists, so no two pages share a snippet.
+const paragraphs = (text = "") => text.split(/\n\s*\n|\n(?=[A-Z🎵#•-])/).map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean);
+const paraCount = new Map();
+for (const v of videos) for (const p of new Set(paragraphs(v.description))) paraCount.set(p, (paraCount.get(p) || 0) + 1);
+const ownSummary = (v, max) => {
+  const p = paragraphs(v.description).find((x) => x.length >= 60 && paraCount.get(x) === 1 && !/https?:\/\/|\b[A-Z] [A-Z] [A-Z]\b|subscribe/i.test(x));
+  return p ? excerpt(p, max) : "";
+};
+const genericDesc = (v) => {
+  const length = v.durationSeconds >= 3600 ? `${fmtDuration(v.durationSeconds)} of ` : "";
+  const kind = v.cats[0] && !v.cats[0].shorts ? v.cats[0].name.toLowerCase() : "calming sound";
+  return `${v.title}: ${length}${kind} from Calming Audio for sleep, study and relaxation.`;
+};
 
 // ---------- partials ----------
 const icons = {
@@ -127,10 +145,11 @@ function footer() {
 </footer>`;
 }
 
-function layout({ title, description, pathname, body, active, head = "", ld = [], ogImage, ogType = "website", bodyClass = "" }) {
+function layout({ title, description, pathname, body, active, head = "", ld = [], ogImage, ogImageAlt, ogType = "website", bodyClass = "", noindex = false }) {
   const canonical = abs(pathname);
   const fullTitle = pathname === "/" ? `${config.siteName}: ${config.tagline}` : `${title} | ${config.siteName}`;
-  const img = ogImage || data.channel?.avatar || "";
+  const img = ogImage || defaultImage;
+  const imgAlt = ogImageAlt || (ogImage ? title : defaultImageAlt);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -138,17 +157,30 @@ function layout({ title, description, pathname, body, active, head = "", ld = []
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
-<link rel="canonical" href="${canonical}">
+${noindex ? '<meta name="robots" content="noindex, follow">' : `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="${canonical}">`}
+<meta name="author" content="${esc(config.siteName)}">
 <meta name="theme-color" content="#060912">
 <meta name="color-scheme" content="dark">
 <meta property="og:site_name" content="${esc(config.siteName)}">
+<meta property="og:locale" content="en_US">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:type" content="${ogType}">
-${img ? `<meta property="og:image" content="${esc(img)}">` : ""}
+${img ? `<meta property="og:image" content="${esc(img)}">
+<meta property="og:image:secure_url" content="${esc(img)}">
+<meta property="og:image:width" content="480">
+<meta property="og:image:height" content="360">
+<meta property="og:image:alt" content="${esc(imgAlt)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+${img ? `<meta name="twitter:image" content="${esc(img)}">
+<meta name="twitter:image:alt" content="${esc(imgAlt)}">` : ""}
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="${esc(config.siteName)}: new videos" href="/feed.xml">
+<link rel="alternate" type="text/plain" title="LLM-friendly site summary" href="/llms.txt">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://i.ytimg.com">
@@ -176,7 +208,7 @@ function card(v, i = 0, { showCat = true } = {}) {
   const cats = v.cats.map((x) => x.slug).join(" ");
   return `<article class="card${v.isShort ? " card-short" : ""}" data-reveal style="--i:${i % 8}" data-cats="${cats}" data-title="${esc(v.title.toLowerCase())}" data-date="${v.publishedAt ? Date.parse(v.publishedAt) : 0}" data-dur="${v.durationSeconds || 0}" data-views="${v.viewCount || 0}">
   <a class="card-media" href="${v.url}" tabindex="-1" aria-hidden="true">
-    <img src="${thumb(v.id, "mqdefault")}" srcset="${thumb(v.id, "mqdefault")} 320w, ${thumb(v.id, "hqdefault")} 480w" sizes="(max-width: 640px) 92vw, 360px" width="320" height="180" loading="lazy" decoding="async" alt="">
+    <img src="${thumb(v.id, "mqdefault")}" srcset="${thumb(v.id, "mqdefault")} 320w, ${thumb(v.id, "hqdefault")} 480w" sizes="(max-width: 640px) 92vw, 360px" width="320" height="180" loading="lazy" decoding="async" alt="${esc(v.title)}">
     ${v.durationSeconds ? `<span class="badge">${fmtDuration(v.durationSeconds)}</span>` : ""}
     <span class="card-play">${icons.play}</span>
   </a>
@@ -222,7 +254,28 @@ ${chips(current)}
 <p class="result-count muted" data-count aria-live="polite"></p>
 <p class="empty" data-empty hidden>Nothing matches that yet. Try “rain”, “ocean” or “brown noise”.</p>`;
 
-const orgLd = { "@context": "https://schema.org", "@type": "Organization", name: "Calming Audio", url: SITE + "/", logo: data.channel?.avatar, sameAs: [YT_CHANNEL] };
+const ORG_ID = SITE + "/#organization";
+const SITE_ID = SITE + "/#website";
+const orgLd = {
+  "@context": "https://schema.org", "@type": "Organization", "@id": ORG_ID,
+  name: "Calming Audio", legalName: "Calming Audio LLC", url: SITE + "/", description: config.description,
+  ...(data.channel?.avatar && { logo: { "@type": "ImageObject", url: data.channel.avatar }, image: data.channel.avatar }),
+  sameAs: [YT_CHANNEL, `https://www.youtube.com/channel/${config.channelId}`],
+  contactPoint: { "@type": "ContactPoint", contactType: "sponsorships and partnerships", url: abs("/contact/") },
+};
+const publisherRef = { "@id": ORG_ID };
+const webPage = (type, name, description, p, extra = {}) => ({
+  "@context": "https://schema.org", "@type": type, "@id": abs(p) + "#webpage", name, description, url: abs(p),
+  inLanguage: "en-US", isPartOf: { "@id": SITE_ID }, ...extra,
+});
+const breadcrumbLd = (items) => ({
+  "@context": "https://schema.org", "@type": "BreadcrumbList",
+  itemListElement: items.map(([name, p], i) => ({ "@type": "ListItem", position: i + 1, name, item: abs(p) })),
+});
+const itemListLd = (list) => ({
+  "@type": "ItemList", numberOfItems: list.length,
+  itemListElement: list.slice(0, 100).map((v, i) => ({ "@type": "ListItem", position: i + 1, url: abs(v.url), name: v.title })),
+});
 
 // ---------- pages ----------
 const pages = [];
@@ -266,7 +319,7 @@ const page = (pathname, html) => pages.push([pathname, html]);
       <div class="feature-copy">
         ${featured.cats[0] ? `<a class="card-cat" href="/category/${featured.cats[0].slug}/">${esc(featured.cats[0].name)}</a>` : ""}
         <h3><a href="${ytWatch(featured.id)}" target="_blank" rel="noopener">${esc(featured.title)}</a></h3>
-        <p class="muted">${esc(excerpt(featured.description, 220))}</p>
+        <p class="muted">${esc(ownSummary(featured, 220) || genericDesc(featured))}</p>
         <div class="feature-meta muted"><time datetime="${isoDate(featured.publishedAt)}">${fmtDate(featured.publishedAt)}</time><span>${fmtDuration(featured.durationSeconds)}</span></div>
         <div class="row"><a class="btn btn-primary" href="${featured.url}"><span>Open video page</span>${icons.arrow}</a><a class="btn btn-ghost" href="${ytWatch(featured.id)}" target="_blank" rel="noopener">${icons.yt}<span>Watch on YouTube</span></a></div>
       </div>
@@ -314,40 +367,51 @@ const page = (pathname, html) => pages.push([pathname, html]);
 </section>`;
   page("/", layout({
     title: config.siteName, description: config.description, pathname: "/", body, bodyClass: "home",
-    ld: [orgLd, { "@context": "https://schema.org", "@type": "WebSite", name: config.siteName, url: SITE + "/" }],
+    ld: [
+      orgLd,
+      { "@context": "https://schema.org", "@type": "WebSite", "@id": SITE_ID, name: config.siteName, alternateName: "Calming Audio sleep sounds", url: SITE + "/", description: config.description, inLanguage: "en-US", publisher: publisherRef },
+      webPage("CollectionPage", `${config.siteName}: ${config.tagline}`, config.description, "/", { about: publisherRef, mainEntity: itemListLd(longform.slice(0, 20)) }),
+    ],
   }));
 }
 
 // All videos
+{
+const description = `Browse all ${stats.videos} Calming Audio videos: rain, ocean, fireplace, white noise, nature sounds and relaxing music for sleep and focus.`;
 page("/videos/", layout({
-  title: "All videos", active: "videos", pathname: "/videos/",
-  description: `Browse all ${stats.videos} Calming Audio videos: rain, ocean, fireplace, white noise, nature sounds and relaxing music for sleep and focus.`,
-  body: `<section class="page-head"><div class="wrap"><p class="eyebrow" data-reveal>The full library</p><h1 data-reveal>All videos</h1><p class="lede" data-reveal>Every Calming Audio upload, ${fmtNum(stats.hours)}+ hours in all. Filter by mood, search by sound, or sort by what listeners play most.</p></div></section>
+  title: "All videos", active: "videos", pathname: "/videos/", description,
+  ld: [webPage("CollectionPage", `All videos | ${config.siteName}`, description, "/videos/", { mainEntity: itemListLd(videos) }), breadcrumbLd([["Home", "/"], ["All videos", "/videos/"]])],
+  body: `<section class="page-head"><div class="wrap"><nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">All videos</span></nav><p class="eyebrow" data-reveal>The full library</p><h1 data-reveal>All videos</h1><p class="lede" data-reveal>Every Calming Audio upload, ${fmtNum(stats.hours)}+ hours in all. Filter by mood, search by sound, or sort by what listeners play most.</p></div></section>
 <section class="section section-tight"><div class="wrap" data-library>${toolbar()}${grid(videos)}</div></section>`,
 }));
+}
 
 // Categories hub
+{
+const description = `Explore ${stats.categories} Calming Audio categories: rain and storms, ocean, fireplace, white and brown noise, baby sleep, nature, study music and more.`;
 page("/categories/", layout({
-  title: "Categories", active: "categories", pathname: "/categories/",
-  description: `Explore Calming Audio by mood: ${activeCats.map((c) => c.name).join(", ")}.`,
-  body: `<section class="page-head"><div class="wrap"><p class="eyebrow" data-reveal>${stats.categories} moods</p><h1 data-reveal>Find your sound</h1><p class="lede" data-reveal>Some people sleep best with rain, others need a fan. Pick a mood and press play.</p></div></section>
+  title: "Categories", active: "categories", pathname: "/categories/", description,
+  ld: [
+    webPage("CollectionPage", `Categories | ${config.siteName}`, description, "/categories/", {
+      mainEntity: { "@type": "ItemList", numberOfItems: activeCats.length, itemListElement: activeCats.map((c, i) => ({ "@type": "ListItem", position: i + 1, url: abs(`/category/${c.slug}/`), name: c.name })) },
+    }),
+    breadcrumbLd([["Home", "/"], ["Categories", "/categories/"]]),
+  ],
+  body: `<section class="page-head"><div class="wrap"><nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">Categories</span></nav><p class="eyebrow" data-reveal>${stats.categories} moods</p><h1 data-reveal>Find your sound</h1><p class="lede" data-reveal>Some people sleep best with rain, others need a fan. Pick a mood and press play.</p></div></section>
 <section class="section section-tight"><div class="wrap"><div class="cat-grid">${activeCats.map(catTile).join("")}</div></div></section>`,
 }));
+}
 
 // Category pages
 for (const c of activeCats) {
   const p = `/category/${c.slug}/`;
+  const description = excerpt(`${c.description} ${c.videos.length} videos from Calming Audio.`, 160);
   page(p, layout({
-    title: `${c.name}`, active: "categories", pathname: p,
-    description: `${c.description} ${c.videos.length} videos from Calming Audio.`,
-    ogImage: c.videos[0] ? thumb(c.videos[0].id) : undefined,
+    title: `${c.name}`, active: "categories", pathname: p, description,
+    ogImage: c.videos[0] ? thumb(c.videos[0].id) : undefined, ogImageAlt: c.videos[0]?.title,
     ld: [
-      { "@context": "https://schema.org", "@type": "CollectionPage", name: `${c.name} | ${config.siteName}`, description: c.description, url: abs(p),
-        mainEntity: { "@type": "ItemList", numberOfItems: c.videos.length, itemListElement: c.videos.slice(0, 100).map((v, i) => ({ "@type": "ListItem", position: i + 1, url: abs(v.url), name: v.title })) } },
-      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: SITE + "/" },
-        { "@type": "ListItem", position: 2, name: "Categories", item: abs("/categories/") },
-        { "@type": "ListItem", position: 3, name: c.name, item: abs(p) }] },
+      webPage("CollectionPage", `${c.name} | ${config.siteName}`, c.description, p, { mainEntity: itemListLd(c.videos) }),
+      breadcrumbLd([["Home", "/"], ["Categories", "/categories/"], [c.name, p]]),
     ],
     body: `<section class="page-head"><div class="wrap">
   <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><a href="/categories/">Categories</a><span>/</span><span aria-current="page">${esc(c.name)}</span></nav>
@@ -361,26 +425,31 @@ for (const c of activeCats) {
 for (const v of videos) {
   const main = v.cats[0];
   const related = (main ? main.videos : longform).filter((x) => x.id !== v.id).slice(0, 8);
-  const desc = excerpt(v.description) || `${v.title}, from Calming Audio.`;
-  const crumbs = [{ name: "Home", item: SITE + "/" }];
-  if (main) crumbs.push({ name: main.name, item: abs(`/category/${main.slug}/`) });
-  crumbs.push({ name: v.title, item: abs(v.url) });
+  const own = ownSummary(v, 158);
+  const desc = own.length >= 70 ? own : excerpt(genericDesc(v), 158);
+  const crumbs = [["Home", "/"]];
+  if (main) crumbs.push([main.name, `/category/${main.slug}/`]);
+  crumbs.push([v.title, v.url]);
   const videoLd = {
-    "@context": "https://schema.org", "@type": "VideoObject",
-    name: v.title, description: (v.description || desc).slice(0, 2000),
+    "@context": "https://schema.org", "@type": "VideoObject", "@id": abs(v.url) + "#video",
+    name: v.title, description: (v.description || genericDesc(v)).slice(0, 2000),
     thumbnailUrl: [thumb(v.id, "maxresdefault"), thumb(v.id, "hqdefault")],
-    uploadDate: isoDate(v.publishedAt), embedUrl: ytEmbed(v.id), url: abs(v.url),
+    uploadDate: isoDate(v.publishedAt || data.fetchedAt), embedUrl: ytEmbed(v.id), url: abs(v.url),
     ...(v.durationSeconds && { duration: isoDuration(v.durationSeconds) }),
     ...(v.viewCount && { interactionStatistic: { "@type": "InteractionCounter", interactionType: { "@type": "WatchAction" }, userInteractionCount: v.viewCount } }),
-    publisher: { "@type": "Organization", name: "Calming Audio", logo: { "@type": "ImageObject", url: data.channel?.avatar } },
+    inLanguage: "en", isFamilyFriendly: true,
+    ...(v.cats.length && { genre: v.cats.map((c) => c.name) }),
+    author: publisherRef, publisher: publisherRef,
+    potentialAction: { "@type": "WatchAction", target: ytWatch(v.id) },
+    sameAs: ytWatch(v.id),
     ...(v.keywords?.length && { keywords: v.keywords.slice(0, 20).join(", ") }),
   };
   const descBlock = v.description ? `<div class="desc" data-desc><div class="desc-body">${linkify(v.description)}</div><button class="desc-toggle" type="button" data-desc-toggle>Show more</button></div>` : "";
 
   page(v.url, layout({
     title: v.title, pathname: v.url, description: desc, ogImage: thumb(v.id, "hqdefault"), ogType: "video.other",
-    head: `<meta property="og:video" content="${ytEmbed(v.id)}"><meta property="og:video:type" content="text/html"><meta property="og:video:width" content="1280"><meta property="og:video:height" content="720">`,
-    ld: [videoLd, { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, ...c })) }],
+    head: `<meta property="og:video" content="${ytEmbed(v.id)}"><meta property="og:video:secure_url" content="${ytEmbed(v.id)}"><meta property="og:video:type" content="text/html"><meta property="og:video:width" content="1280"><meta property="og:video:height" content="720">${v.publishedAt ? `<meta property="video:release_date" content="${isoDate(v.publishedAt)}">` : ""}${v.durationSeconds ? `<meta property="video:duration" content="${v.durationSeconds}">` : ""}`,
+    ld: [videoLd, webPage("WebPage", v.title, desc, v.url, { primaryImageOfPage: thumb(v.id, "hqdefault"), mainEntity: { "@id": abs(v.url) + "#video" }, ...(v.publishedAt && { datePublished: isoDate(v.publishedAt) }) }), breadcrumbLd(crumbs)],
     bodyClass: "watch",
     body: `<section class="watch-hero">
   <div class="ambient" aria-hidden="true" style="background-image:url('${thumb(v.id, "mqdefault")}')"></div>
@@ -456,14 +525,18 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     <div class="form-done" data-done hidden><span class="done-ring"></span><h2>Message sent</h2><p class="muted">Thanks for reaching out. We usually reply within a few days.</p></div>
   </form>
 </div></section>`;
-  page("/contact/", layout({ title: "Sponsorships & contact", active: "contact", pathname: "/contact/", description: "Sponsor, partner with or license audio from Calming Audio. Get in touch about integrations, brand soundscapes and custom requests.", body }));
+  const description = "Sponsor, partner with or license audio from Calming Audio. Get in touch about integrations, brand soundscapes and custom requests.";
+  page("/contact/", layout({
+    title: "Sponsorships & contact", active: "contact", pathname: "/contact/", description, body,
+    ld: [webPage("ContactPage", `Sponsorships & contact | ${config.siteName}`, description, "/contact/", { about: publisherRef }), breadcrumbLd([["Home", "/"], ["Sponsorships & contact", "/contact/"]])],
+  }));
 }
 
 // 404
 const notFound = layout({
-  title: "Page not found", pathname: "/404.html", description: "This page drifted off.",
+  title: "Page not found", pathname: "/404.html", description: "This page drifted off.", noindex: true,
   body: `<section class="page-head center"><div class="wrap"><p class="eyebrow">404</p><h1>This page drifted off to sleep.</h1><p class="lede">Let’s get you somewhere calmer.</p><div class="row center"><a class="btn btn-primary" href="/">Back home</a><a class="btn btn-ghost" href="/videos/">Browse videos</a></div></div></section>`,
-}).replace('<link rel="canonical"', '<meta name="robots" content="noindex"><link rel="canonical"');
+});
 
 // ---------- write ----------
 await rm(out, { recursive: true, force: true });
@@ -478,27 +551,120 @@ await writeFile(path.join(out, "404.html"), notFound);
 
 // Sitemap with video extensions so Google can attach each video to its page.
 const xml = (s) => esc(String(s)).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
-const now = new Date().toISOString();
+// lastmod only moves when content really changes (a new upload), so search engines keep trusting it.
+const lastmodFor = (p, v) => {
+  if (v) return isoDate(v.publishedAt || data.fetchedAt);
+  const cat = p.startsWith("/category/") && catBySlug[p.split("/")[2]];
+  return isoDate(newest(cat ? cat.videos : videos));
+};
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
 ${pages.map(([p]) => {
   const v = videos.find((x) => x.url === p);
-  const last = v?.publishedAt ? isoDate(v.publishedAt) : now;
+  const last = lastmodFor(p, v);
   const vid = v ? `
     <video:video>
       <video:thumbnail_loc>${thumb(v.id, "hqdefault")}</video:thumbnail_loc>
       <video:title>${xml(v.title.slice(0, 100))}</video:title>
-      <video:description>${xml((excerpt(v.description, 2000) || v.title))}</video:description>
+      <video:description>${xml((ownSummary(v, 2000) || genericDesc(v)))}</video:description>
       <video:player_loc>${ytEmbed(v.id)}</video:player_loc>${v.durationSeconds && v.durationSeconds <= 28800 ? `
       <video:duration>${v.durationSeconds}</video:duration>` : ""}${v.publishedAt ? `
       <video:publication_date>${isoDate(v.publishedAt)}</video:publication_date>` : ""}
       <video:family_friendly>yes</video:family_friendly>
+      <video:uploader info="${YT_CHANNEL}">${xml(config.siteName)}</video:uploader>
     </video:video>` : "";
   return `  <url><loc>${abs(p)}</loc><lastmod>${last}</lastmod>${vid}</url>`;
 }).join("\n")}
 </urlset>`;
 await writeFile(path.join(out, "sitemap.xml"), sitemap);
-await writeFile(path.join(out, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
+
+// Every crawler, search and AI alike, is welcome everywhere; the 404 page carries its own noindex.
+await writeFile(path.join(out, "robots.txt"), `# ${config.siteName} (${SITE})
+# All search engines and AI crawlers are welcome to index this site.
+User-agent: *
+Allow: /
+
+# A plain-text guide to this site for AI assistants: ${SITE}/llms.txt
+Sitemap: ${SITE}/sitemap.xml
+`);
+
+// llms.txt (llmstxt.org): a short Markdown map of the site for AI assistants; llms-full.txt lists every video.
+const llmsVideo = (v) => `- [${v.title}](${abs(v.url)}): ${[fmtDuration(v.durationSeconds), v.publishedAt && fmtDate(v.publishedAt)].filter(Boolean).join(", ")}. YouTube: ${ytWatch(v.id)}`;
+const llmsIntro = `# ${config.siteName}
+
+> ${config.description}
+
+${config.siteName} is a YouTube channel (${YT_CHANNEL}) publishing long, steady soundscapes for sleep, study, relaxation and focus: rain and thunderstorms, ocean waves, crackling fireplaces, white, pink and brown noise, nature ambience, household and machine sounds, baby sleep sounds and calm music. Many videos run 8 to 12 hours. The library has ${stats.videos} videos (${fmtNum(stats.hours)}+ hours) published since ${stats.since}, and this site lists every one of them. Each video has its own page with the embedded player and full description.
+
+Sponsorships, brand partnerships, licensing and custom soundscape requests: ${abs("/contact/")}
+`;
+const llms = `${llmsIntro}
+## Main pages
+
+- [Home](${SITE}/): latest upload, categories and most played videos
+- [All videos](${abs("/videos/")}): the full library, searchable and sortable
+- [Categories](${abs("/categories/")}): every mood and sound type
+- [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
+- [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
+
+## Categories
+
+${activeCats.map((c) => `- [${c.name}](${abs(`/category/${c.slug}/`)}): ${c.description} (${c.videos.length} videos)`).join("\n")}
+
+## Latest videos
+
+${longform.slice(0, 20).map(llmsVideo).join("\n")}
+
+## Most played
+
+${[...longform].sort((a, b) => b.viewCount - a.viewCount).slice(0, 10).map(llmsVideo).join("\n")}
+
+## Optional
+
+- [Every video, with descriptions](${abs("/llms-full.txt")})
+- [Sitemap](${abs("/sitemap.xml")})
+- [New videos feed (RSS)](${abs("/feed.xml")})
+`;
+const llmsFull = `${llmsIntro}
+${activeCats.map((c) => `## ${c.name}
+
+${c.description}
+Page: ${abs(`/category/${c.slug}/`)}
+
+${c.videos.map((v) => `### ${v.title}
+
+- Page: ${abs(v.url)}
+- YouTube: ${ytWatch(v.id)}
+- ${[v.durationSeconds && `Length: ${fmtDuration(v.durationSeconds)}`, v.publishedAt && `Published: ${fmtDate(v.publishedAt)}`].filter(Boolean).join(" · ")}
+
+${ownSummary(v, 600) || genericDesc(v)}
+`).join("\n")}`).join("\n")}`;
+await writeFile(path.join(out, "llms.txt"), llms);
+await writeFile(path.join(out, "llms-full.txt"), llmsFull);
+
+// RSS feed of the newest uploads, for feed readers and faster discovery.
+const feedItems = videos.slice(0, 30);
+await writeFile(path.join(out, "feed.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+  <title>${xml(config.siteName)}</title>
+  <link>${SITE}/</link>
+  <description>${xml(config.description)}</description>
+  <language>en-us</language>
+  <atom:link href="${SITE}/feed.xml" rel="self" type="application/rss+xml"/>
+  <lastBuildDate>${new Date(newest(videos)).toUTCString()}</lastBuildDate>
+${feedItems.map((v) => `  <item>
+    <title>${xml(v.title)}</title>
+    <link>${abs(v.url)}</link>
+    <guid isPermaLink="true">${abs(v.url)}</guid>
+    ${v.publishedAt ? `<pubDate>${new Date(v.publishedAt).toUTCString()}</pubDate>` : ""}
+    <description>${xml(ownSummary(v, 500) || genericDesc(v))}</description>
+    ${v.cats.map((c) => `<category>${xml(c.name)}</category>`).join("")}
+    <media:thumbnail url="${thumb(v.id)}" width="480" height="360"/>
+  </item>`).join("\n")}
+</channel>
+</rss>
+`);
 const host = new URL(SITE).hostname;
 if (!host.endsWith("github.io")) await writeFile(path.join(out, "CNAME"), host + "\n");
 await writeFile(path.join(out, ".nojekyll"), "");

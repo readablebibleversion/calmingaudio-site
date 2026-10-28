@@ -21,8 +21,13 @@ npm run dev      # build and preview at http://localhost:4173
 | `/watch/<video-name>/` | One page per video: embedded player, title linked to YouTube, full description, related videos |
 | `/contact/` | Sponsorship and contact form |
 | `sitemap.xml` | Includes Google video-sitemap data for every video page |
+| `robots.txt` | Lets every search engine and AI crawler in, and points to the sitemap |
+| `llms.txt`, `llms-full.txt` | Plain-text guides to the site and every video for AI assistants ([llmstxt.org](https://llmstxt.org)) |
+| `feed.xml` | RSS feed of the 30 newest videos |
 
-Each video page carries `VideoObject` structured data, so Google can show it as a video result and credit your site for it.
+Every page has a unique title and meta description, a canonical URL, Open Graph and Twitter card tags, and robots directives that allow large image and video previews. Pages also carry structured data: `Organization` and `WebSite` on the home page, `CollectionPage` with `ItemList` on list pages, `ContactPage`, `BreadcrumbList` everywhere, and `VideoObject` on each video page, so Google can show it as a video result and credit your site for it. Meta descriptions skip the boilerplate repeated across YouTube descriptions, so no two pages share a snippet.
+
+After the site goes live, add `calmingaudio.com` to [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters), and submit `https://calmingaudio.com/sitemap.xml` in both.
 
 ## Going live on calmingaudio.com (GitHub Pages, $0/month)
 
@@ -32,7 +37,7 @@ The site is just files, so it doesn't need paid hosting. GitHub Pages hosts it f
 2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
 3. Open **Settings → Secrets and variables → Actions** and add:
    - `CONTACT_FORM_ENDPOINT`: the Google script URL from the contact form steps below.
-   - `YOUTUBE_API_KEY` (optional, recommended): a free YouTube Data API v3 key from <https://console.cloud.google.com/> (APIs & Services → enable “YouTube Data API v3” → Credentials → Create API key). It makes the automatic video updates more reliable from GitHub's servers.
+   - `YOUTUBE_API_KEY` (optional, not needed): new uploads appear automatically without it. A YouTube Data API v3 key only adds refreshed descriptions and play counts for older videos.
 4. In **Settings → Pages → Custom domain**, enter `calmingaudio.com` and save.
 5. At your DNS host (currently SiteGround: Site Tools → Domain → DNS Zone Editor), change **only** these records:
    - Replace the `A` record for `calmingaudio.com` with four A records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
