@@ -73,5 +73,8 @@ Edit `categories.json`. Each category has a `match` pattern that is checked agai
 
 - `featuredVideoId`: pin a specific video in the home page “Latest upload” spot (blank means the newest).
 - `hiddenVideoIds`: YouTube ids to leave off the site.
+- `app.appStoreUrl`: paste the Sleep Worlds App Store link here when the app goes live. Every "Coming soon to iPhone" button turns into "Download on the App Store".
+
+The Sleep Worlds privacy, terms and support pages (`/privacy/`, `/terms/`, `/support/`) are written in `scripts/build.mjs`. The app links to those exact addresses, so keep the paths.
 
 Video page URLs are saved in `data/videos.json`, so a page keeps its address even if you later rename the video on YouTube.

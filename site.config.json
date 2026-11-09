@@ -9,5 +9,9 @@
     "endpoint": ""
   },
   "hiddenVideoIds": [],
-  "featuredVideoId": ""
+  "featuredVideoId": "",
+  "app": {
+    "name": "Sleep Worlds",
+    "appStoreUrl": ""
+  }
 }

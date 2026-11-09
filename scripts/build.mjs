@@ -103,6 +103,24 @@ const icons = {
 
 const logo = `<span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
 
+// Sleep Worlds iOS app. Until config.app.appStoreUrl is set, it's shown as "coming soon".
+const APP = config.app?.name || "Sleep Worlds";
+const APP_URL = config.app?.appStoreUrl || "";
+const appleIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.3-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4zM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>';
+const appCta = (extra = "") => APP_URL
+  ? `<a class="btn btn-primary${extra}" href="${esc(APP_URL)}" target="_blank" rel="noopener">${appleIcon}<span>Download on the App Store</span></a>`
+  : `<span class="btn btn-soon${extra}" aria-label="Coming soon to the App Store">${appleIcon}<span>Coming soon to iPhone</span></span>`;
+// A small illustrated phone screen: a night-time world with moon, stars and hills.
+const appPhone = `<div class="app-phone" aria-hidden="true">
+  <div class="app-screen">
+    <span class="app-moon"></span>
+    <span class="app-stars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <span class="app-hill h1"></span><span class="app-hill h2"></span><span class="app-hill h3"></span>
+    <span class="app-cabin"><i></i></span>
+    <span class="app-ui"><b>${esc(APP)}</b><small>Night 7</small><span class="app-timer">8:00:00</span></span>
+  </div>
+</div>`;
+
 function header(active) {
   const link = (href, label, key) => `<a href="${href}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`;
   return `<header class="site-header" data-header>
@@ -112,6 +130,7 @@ function header(active) {
     <nav id="site-nav" class="site-nav" data-nav>
       ${link("/videos/", "All videos", "videos")}
       ${link("/categories/", "Categories", "categories")}
+      ${link("/sleep-worlds/", "App", "app")}
       ${link("/contact/", "Sponsorships", "contact")}
       <a class="btn btn-sub" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Subscribe</span></a>
     </nav>
@@ -141,7 +160,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span>Turn the volume down low. Sleep well.</span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">Sleep Worlds app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
 </footer>`;
 }
 
@@ -350,6 +369,20 @@ const page = (pathname, html) => pages.push([pathname, html]);
 
 <section class="section">
   <div class="wrap">
+    <div class="app-promo" data-reveal data-glow>
+      <div>
+        <p class="eyebrow">${APP_URL ? "New on iPhone" : "Coming soon to iPhone"}</p>
+        <h2>Meet <em>${esc(APP)}</em>, our sleep app.</h2>
+        <p class="muted">Pick a world, set a sleep timer and drift off to calm scenes and sound. Wake to a gentle alarm, and collect stamps and postcards for every night you spend in each world.</p>
+        <div class="row">${appCta()}<a class="btn btn-ghost" href="/sleep-worlds/"><span>Learn more</span>${icons.arrow}</a></div>
+      </div>
+      ${appPhone}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
     <div class="partner" data-reveal data-glow>
       <div>
         <p class="eyebrow">Sponsorships &amp; partnerships</p>
@@ -532,6 +565,171 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   }));
 }
 
+// Sleep Worlds app landing page
+{
+  const p = "/sleep-worlds/";
+  const description = `${APP} is the Calming Audio sleep app for iPhone: calm worlds of scene and sound, a sleep timer, gentle alarms, and stamps for every night. ${APP_URL ? "Available now." : "Coming soon."}`;
+  const features = [
+    ["🌙", "Choose a world", "Each world pairs a calm scene with soothing sound. Pick one for tonight and let it play."],
+    ["⏳", "Sleep timer", "Set how long your world keeps playing, so it can stop on its own once you’re asleep."],
+    ["⏰", "Gentle alarms & bedtime reminders", "Wake up softly, and get a nudge when it’s time to wind down. Everything is scheduled right on your phone."],
+    ["✉️", "Stamps & postcards", "Every night you spend in a world counts. Collect stamps, postcards and rewards along the way."],
+    ["☁️", "Keep your progress", "No account needed. If you want one, sign in with email or Apple to carry your progress to a new phone."],
+    ["🔒", "Private by design", "No ads, no tracking across apps, and we never sell your information. Purchases are handled by Apple."],
+  ];
+  page(p, layout({
+    title: `${APP}: the Calming Audio sleep app`, active: "app", pathname: p, description,
+    ld: [
+      { "@context": "https://schema.org", "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication",
+        description, url: abs(p), publisher: publisherRef, author: publisherRef,
+        ...(APP_URL ? { downloadUrl: APP_URL, installUrl: APP_URL } : {}) },
+      webPage("WebPage", `${APP}: the Calming Audio sleep app`, description, p, { about: { "@type": "MobileApplication", name: APP } }),
+      breadcrumbLd([["Home", "/"], [APP, p]]),
+    ],
+    body: `<section class="page-head app-hero"><div class="wrap">
+  <div class="app-hero-copy">
+    <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(APP)}</span></nav>
+    <p class="eyebrow" data-reveal>${APP_URL ? "Now on iPhone" : "Coming soon to iPhone"}</p>
+    <h1 data-reveal>${esc(APP)}</h1>
+    <p class="lede" data-reveal>The sleep app from Calming Audio. Step into a calm world of scene and sound, set your timer, and let the night take care of itself.</p>
+    <div class="row" data-reveal>${appCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Follow on YouTube for launch news</span></a></div>
+  </div>
+  <div data-reveal>${appPhone}</div>
+</div></section>
+<section class="section section-tight"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">What’s inside</p><h2>Made for falling asleep</h2></div>
+  <div class="app-features">${features.map(([icon, h, t], i) => `<div class="app-feature" data-reveal data-glow style="--i:${i}"><span class="cat-icon" aria-hidden="true">${icon}</span><h3>${h}</h3><p class="muted">${t}</p></div>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="partner" data-reveal data-glow>
+    <div>
+      <p class="eyebrow">Plans</p>
+      <h2>Monthly, Annual or Family.</h2>
+      <p class="muted">${esc(APP)} offers Monthly, Annual and Family subscriptions, plus one-time purchases, all handled securely by Apple. Cancel anytime in your App Store settings.</p>
+      <div class="row">${appCta()}</div>
+    </div>
+    <ul class="app-help">
+      <li><a href="/support/">Support &amp; FAQs ${icons.arrow}</a></li>
+      <li><a href="/privacy/">Privacy Policy ${icons.arrow}</a></li>
+      <li><a href="/terms/">Terms of Use ${icons.arrow}</a></li>
+    </ul>
+  </div>
+</div></section>`,
+  }));
+}
+
+// Sleep Worlds app pages. The iOS app links to these exact addresses, so keep the paths.
+{
+  const SUPPORT_EMAIL = "calmingaudio@gmail.com";
+  const EFFECTIVE = "November 9, 2026";
+  const EFFECTIVE_ISO = "2026-11-09";
+  const mail = `<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`;
+  const appLinks = `<p class="legal-links"><a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a> · <a href="/support/">Support</a></p>`;
+  const legal = (slug, title, description, effective, content) => {
+    const p = `/${slug}/`;
+    page(p, layout({
+      title, pathname: p, description,
+      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: EFFECTIVE_ISO, dateModified: EFFECTIVE_ISO }) }), breadcrumbLd([["Home", "/"], [title, p]])],
+      body: `<section class="page-head"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(title)}</span></nav>
+  <p class="eyebrow" data-reveal>${APP} app</p>
+  <h1 data-reveal>${esc(title)}</h1>
+  ${effective ? `<p class="muted" data-reveal>Effective: <time datetime="${EFFECTIVE_ISO}">${EFFECTIVE}</time></p>` : ""}
+</div></section>
+<section class="section section-tight"><div class="wrap"><article class="prose" data-reveal>
+${content}
+${appLinks}
+</article></div></section>`,
+    }));
+  };
+
+  legal("privacy", `${APP} Privacy Policy`, `How the ${APP} app by Calming Audio handles your information: no ads, no tracking, optional accounts, and purchases handled by Apple.`, true, `
+<p>${APP} is an app by Calming Audio LLC (“we”, “us”). This policy explains what information the app uses, why, and the choices you have.</p>
+
+<h2>The short version</h2>
+<ul>
+  <li>You can use ${APP} without an account. If you do, everything stays on your phone.</li>
+  <li>If you create an account, we keep your email address and your sleep progress so you can get it back on a new phone.</li>
+  <li>Purchases are handled by Apple. We never see your card or payment details.</li>
+  <li>We don’t show ads, we don’t sell your information, and we don’t track you across other apps or websites.</li>
+</ul>
+
+<h2>Information that stays on your phone</h2>
+<p>Your worlds, settings, alarms, sleep timer, the nights you’ve spent in each world, your stamps and postcards are saved on your device. We can’t see them unless you create an account.</p>
+
+<h2>If you create an account</h2>
+<p>Accounts are optional. If you sign in with your email address or with Apple, we store:</p>
+<ul>
+  <li><strong>Your email address</strong> (or the private relay address Apple gives us if you choose “Hide My Email”), so you can sign in.</li>
+  <li><strong>Your progress</strong>: which nights you completed, which world you slept in, how long each session lasted, and the stamps, postcards and rewards you’ve earned. This lets you keep your progress on a new phone.</li>
+</ul>
+<p>This information is stored by our account provider, Supabase, on our behalf.</p>
+
+<h2>Purchases</h2>
+<p>Subscriptions and purchases are processed by Apple. We never receive your payment details. To know what you’ve bought and unlock it on your devices, we use RevenueCat, which receives your purchase history and an app user ID. If you’re signed in, that ID is your ${APP} account ID, so your purchases follow your account.</p>
+
+<h2>Notifications and alarms</h2>
+<p>If you turn on alarms or bedtime reminders, they are scheduled on your phone. We don’t receive them.</p>
+
+<h2>Microphone</h2>
+<p>${APP} never records audio. iOS may show a microphone notice because an audio library inside the app contains microphone code. The app never turns the microphone on.</p>
+
+<h2>Services we use</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Service</th><th scope="col">What it does for us</th><th scope="col">What it receives</th></tr></thead>
+  <tbody>
+    <tr><td>Apple (App Store)</td><td>Payments and subscriptions</td><td>Your purchases, under Apple’s privacy policy</td></tr>
+    <tr><td>Supabase</td><td>Accounts and saved progress</td><td>Email address and progress, only if you create an account</td></tr>
+    <tr><td>RevenueCat</td><td>Knowing what you’ve bought</td><td>Purchase history and an app user ID</td></tr>
+  </tbody>
+</table></div>
+<p>We don’t sell or share your information with anyone else, and we don’t use it for advertising.</p>
+
+<h2>Keeping and deleting your information</h2>
+<p>We keep your account information until you delete your account. You can delete it at any time in the app under <strong>Settings → Account → Delete account</strong>. This permanently removes your email address and saved progress from our account system. If you signed in with Apple, it also removes ${APP}’ access to your Apple ID.</p>
+<p>To ask us to delete purchase records held by RevenueCat, or for any other privacy request, contact us at the address below.</p>
+
+<h2>Children</h2>
+<p>${APP} is not directed to children under 13, and we don’t knowingly collect personal information from them.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy, we’ll update the date at the top and, for significant changes, tell you in the app.</p>
+
+<h2>Contact</h2>
+<p>Calming Audio LLC<br>${mail}</p>`);
+
+  legal("terms", `${APP} Terms of Use`, `Terms of use for the ${APP} app by Calming Audio, including how subscriptions, renewals, cancellations and refunds work.`, true, `
+<p>${APP} is provided by Calming Audio LLC. Your use of the app is governed by Apple’s Licensed Application End User License Agreement (the “Standard EULA”):</p>
+<p><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</a></p>
+
+<h2>Subscriptions</h2>
+<ul>
+  <li>${APP} offers Monthly, Annual and Family subscriptions, and one-time purchases.</li>
+  <li>Payment is charged to your Apple Account when you confirm the purchase.</li>
+  <li>Subscriptions renew automatically unless you cancel at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours before the period ends.</li>
+  <li>If a free trial is offered, any unused part of it ends when you buy a subscription.</li>
+  <li>You can manage and cancel subscriptions in your App Store account settings.</li>
+  <li>Refunds are handled by Apple under its policies.</li>
+</ul>
+
+<h2>Wellbeing</h2>
+<p>${APP} offers sounds and scenes to help you relax. It is not a medical device and doesn’t diagnose or treat any condition. If you have ongoing trouble sleeping, talk to a doctor.</p>
+
+<h2>Contact</h2>
+<p>${mail}</p>`);
+
+  legal("support", `${APP} Support`, `Get help with the ${APP} app: restore purchases, cancel a subscription, delete your account, fix alarms, or email Calming Audio support.`, false, `
+<p class="lede">Need help with ${APP}? Email us at ${mail} and we’ll get back to you.</p>
+
+<h2>Common questions</h2>
+<ul>
+  <li><strong>Restore purchases:</strong> open the app, go to Settings → Purchases → Restore purchases.</li>
+  <li><strong>Cancel a subscription:</strong> go to Settings → Purchases → Manage subscription, or to your Apple Account’s Subscriptions in the iPhone Settings app.</li>
+  <li><strong>Delete your account:</strong> open the app, go to Settings → Account → Delete account.</li>
+  <li><strong>The alarm didn’t sound:</strong> check that ${APP} is allowed to use Alarms in iPhone Settings, and that your phone’s volume is up.</li>
+</ul>`);
+}
+
 // 404
 const notFound = layout({
   title: "Page not found", pathname: "/404.html", description: "This page drifted off.", noindex: true,
@@ -605,6 +803,7 @@ const llms = `${llmsIntro}
 - [All videos](${abs("/videos/")}): the full library, searchable and sortable
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
+- [${APP} app](${abs("/sleep-worlds/")}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories
