@@ -112,16 +112,15 @@ const appleIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="curre
 const appCta = (extra = "") => APP_URL
   ? `<a class="btn btn-primary${extra}" href="${esc(APP_URL)}" target="_blank" rel="noopener">${appleIcon}<span>Download on the App Store</span></a>`
   : `<span class="btn btn-soon${extra}" aria-label="Coming soon to the App Store">${appleIcon}<span>Coming soon to iPhone</span></span>`;
-// A small illustrated phone screen: a night-time world with moon, stars and hills.
-const appPhone = `<div class="app-phone" aria-hidden="true">
-  <div class="app-screen">
-    <span class="app-moon"></span>
-    <span class="app-stars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-    <span class="app-hill h1"></span><span class="app-hill h2"></span><span class="app-hill h3"></span>
-    <span class="app-cabin"><i></i></span>
-    <span class="app-ui"><b>${esc(APP)}</b><small>Night 7</small><span class="app-timer">8:00:00</span></span>
-  </div>
-</div>`;
+// App Store screenshots in src/assets/app/ (each has a 920px and a 460px version).
+const appShots = {
+  palace: { alt: `${APP} screen: “Where are you sleeping tonight?” showing the Arabian Courtyard Palace world with a Sleep here button` },
+  mix: { alt: `${APP} sleep screen in the Nordic Longhouse: music, fire and wind sliders, white and pink noise, a 45 minute timer and fade to black` },
+  castle: { alt: `${APP} screen showing the Medieval Castle world: a bed by a fireplace and a rainy gothic window` },
+  cabin: { alt: `${APP} screen showing the Cabin in the Woods world: a wood stove, an oil lamp and rain on the window` },
+};
+const appShot = (name, { eager = false, sizes = "(max-width: 760px) 70vw, 300px" } = {}) =>
+  `<img class="app-shot" src="/assets/app/shot-${name}.webp" srcset="/assets/app/shot-${name}-460.webp 460w, /assets/app/shot-${name}.webp 920w" sizes="${sizes}" width="920" height="2000" alt="${esc(appShots[name].alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 
 function header(active) {
   const link = (href, label, key) => `<a href="${href}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`;
@@ -166,7 +165,7 @@ function footer() {
 </footer>`;
 }
 
-function layout({ title, description, pathname, body, active, head = "", ld = [], ogImage, ogImageAlt, ogType = "website", bodyClass = "", noindex = false }) {
+function layout({ title, description, pathname, body, active, head = "", ld = [], ogImage, ogImageAlt, ogImageWidth = 480, ogImageHeight = 360, ogType = "website", bodyClass = "", noindex = false }) {
   const canonical = abs(pathname);
   const fullTitle = pathname === "/" ? `${config.siteName}: ${config.tagline}` : `${title} | ${config.siteName}`;
   const img = ogImage || defaultImage;
@@ -191,8 +190,8 @@ ${noindex ? '<meta name="robots" content="noindex, follow">' : `<meta name="robo
 <meta property="og:type" content="${ogType}">
 ${img ? `<meta property="og:image" content="${esc(img)}">
 <meta property="og:image:secure_url" content="${esc(img)}">
-<meta property="og:image:width" content="480">
-<meta property="og:image:height" content="360">
+<meta property="og:image:width" content="${ogImageWidth}">
+<meta property="og:image:height" content="${ogImageHeight}">
 <meta property="og:image:alt" content="${esc(imgAlt)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
@@ -375,10 +374,10 @@ const page = (pathname, html) => pages.push([pathname, html]);
       <div>
         <p class="eyebrow">${APP_URL ? "New on iPhone" : "Coming soon to iPhone"}</p>
         <h2>Meet <em>${esc(APP)}</em>, our sleep app.</h2>
-        <p class="muted">Pick a world, set a sleep timer and drift off to calm scenes and sound. Wake to a gentle alarm, and collect stamps and postcards for every night you spend in each world.</p>
-        <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>Learn more</span>${icons.arrow}</a></div>
+        <p class="muted">Fall asleep in a different room every night: a cabin in the woods, a medieval castle, a palace courtyard, a Nordic longhouse. Mix in rain, fans or soft noise, set a timer that fades out, and wake to a gentle alarm.</p>
+        <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>See the destinations</span>${icons.arrow}</a></div>
       </div>
-      ${appPhone}
+      <div class="app-shot-wrap">${appShot("cabin")}</div>
     </div>
   </div>
 </section>
@@ -570,20 +569,24 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
 // App landing page
 {
   const p = APP_PATH;
-  const description = `${APP} is the Calming Audio sleep app for iPhone: calm worlds of scene and sound, a sleep timer, gentle alarms, and stamps for every night. ${APP_URL ? "Available now." : "Coming soon."}`;
+  const description = `${APP} is the Calming Audio sleep app for iPhone: fall asleep in a cabin, castle, palace or Arctic lodge, mix in soft noise, and fade out on a timer. ${APP_URL ? "Available now." : "Coming soon."}`;
   const features = [
-    ["🌙", "Choose a world", "Each world pairs a calm scene with soothing sound. Pick one for tonight and let it play."],
-    ["⏳", "Sleep timer", "Set how long your world keeps playing, so it can stop on its own once you’re asleep."],
+    ["🗺️", "A new room every night", "Swipe through rooms from around the world, from a cabin in the woods to a palace courtyard, and tap Sleep here."],
+    ["🎚️", "Mix in the sounds you love", "Set the music and the room’s own sound, then mix in white, pink or brown noise over any world."],
+    ["🌘", "Fades out as you drift off", "Pick a timer and the sound fades out on its own, while the screen fades to black so it never keeps you up."],
     ["⏰", "Gentle alarms & bedtime reminders", "Wake up softly, and get a nudge when it’s time to wind down. Everything is scheduled right on your phone."],
-    ["✉️", "Stamps & postcards", "Every night you spend in a world counts. Collect stamps, postcards and rewards along the way."],
-    ["☁️", "Keep your progress", "No account needed. If you want one, sign in with email or Apple to carry your progress to a new phone."],
-    ["🔒", "Private by design", "No ads, no tracking across apps, and we never sell your information. Purchases are handled by Apple."],
+    ["✉️", "Stamps & postcards", "Every night you spend in a destination counts. Collect stamps, postcards and rewards along the way."],
+    ["🔒", "Private by design", "No account needed, no ads and no tracking across apps. Sign in only if you want your progress on a new phone."],
   ];
+  const destinations = ["a Japanese garden room", "an Arabian palace courtyard", "an Arctic cabin under the northern lights", "a Nordic longhouse", "a room beneath the sea"];
   page(p, layout({
     title: `${APP}: the Calming Audio sleep app`, active: "app", pathname: p, description,
+    ogImage: abs("/assets/app/og-sleep-destinations.jpg"), ogImageWidth: 1200, ogImageHeight: 630,
+    ogImageAlt: `Four ${APP} app screens: Arabian Courtyard Palace, the Nordic Longhouse sound mixer, Medieval Castle and Cabin in the Woods`,
     ld: [
       { "@context": "https://schema.org", "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication",
         description, url: abs(p), publisher: publisherRef, author: publisherRef,
+        screenshot: Object.keys(appShots).map((n) => abs(`/assets/app/shot-${n}.webp`)), image: abs("/assets/app/og-sleep-destinations.jpg"),
         ...(APP_URL ? { downloadUrl: APP_URL, installUrl: APP_URL } : {}) },
       webPage("WebPage", `${APP}: the Calming Audio sleep app`, description, p, { about: { "@type": "MobileApplication", name: APP } }),
       breadcrumbLd([["Home", "/"], [APP, p]]),
@@ -593,12 +596,22 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(APP)}</span></nav>
     <p class="eyebrow" data-reveal>${APP_URL ? "Now on iPhone" : "Coming soon to iPhone"}</p>
     <h1 data-reveal>${esc(APP)}</h1>
-    <p class="lede" data-reveal>The sleep app from Calming Audio. Step into a calm world of scene and sound, set your timer, and let the night take care of itself.</p>
+    <p class="lede" data-reveal>Where are you sleeping tonight? The sleep app from Calming Audio puts you in a different room every night, with the sounds to match. Set your timer and let the night take care of itself.</p>
     <div class="row" data-reveal>${appCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Follow on YouTube for launch news</span></a></div>
   </div>
-  <div data-reveal>${appPhone}</div>
+  <div class="app-shot-wrap" data-reveal>${appShot("palace", { eager: true })}</div>
 </div></section>
 <section class="section section-tight"><div class="wrap">
+  <figure class="app-strip" data-reveal>
+    <img src="/assets/app/destinations.webp" srcset="/assets/app/destinations-1000.webp 1000w, /assets/app/destinations.webp 2000w" sizes="(max-width: 1240px) 100vw, 1200px" width="2000" height="857" loading="lazy" decoding="async" alt="Five ${esc(APP)} destinations side by side: ${destinations.join(", ")}">
+    <figcaption><span class="eyebrow">The destinations</span><span>Castles, palaces, cabins, the Arctic and beyond.</span></figcaption>
+  </figure>
+</div></section>
+<section class="section section-tight"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">Inside the app</p><h2>A look around</h2></div>
+  <div class="app-gallery" tabindex="0" aria-label="${esc(APP)} screenshots">${Object.keys(appShots).map((n, i) => `<figure data-reveal style="--i:${i}">${appShot(n, { sizes: "(max-width: 760px) 72vw, 280px" })}</figure>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
   <div class="section-head" data-reveal><p class="eyebrow">What’s inside</p><h2>Made for falling asleep</h2></div>
   <div class="app-features">${features.map(([icon, h, t], i) => `<div class="app-feature" data-reveal data-glow style="--i:${i}"><span class="cat-icon" aria-hidden="true">${icon}</span><h3>${h}</h3><p class="muted">${t}</p></div>`).join("")}</div>
 </div></section>
