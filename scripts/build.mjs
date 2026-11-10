@@ -788,6 +788,7 @@ await writeFile(path.join(out, "sitemap.xml"), sitemap);
 await writeFile(path.join(out, "robots.txt"), `# ${config.siteName} (${SITE})
 # All search engines and AI crawlers are welcome to index this site.
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 # A plain-text guide to this site for AI assistants: ${SITE}/llms.txt
