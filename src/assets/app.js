@@ -5,21 +5,43 @@
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
 
+  // Every interactive widget is a small explicit state machine. Its current state is mirrored to
+  // data-state on the element (for CSS, tests and agents to read), and send() only follows the
+  // transitions listed for the current state, so impossible moves like "send while sending" are no-ops.
+  // render(state, data) is the one place that updates the DOM for a state.
+  const machine = (el, initial, transitions, render) => {
+    let state = initial;
+    const enter = (next, data) => { state = next; el.dataset.state = next; render(next, data); };
+    enter(initial);
+    return {
+      get state() { return state; },
+      send(event, data) {
+        const next = transitions[state]?.[event];
+        if (next) enter(next, data);
+        return !!next;
+      },
+    };
+  };
+
   // ---------- header ----------
   const header = $("[data-header]");
   const onScroll = () => header?.classList.toggle("scrolled", scrollY > 12);
   addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
+  // Mobile menu: closed <-> open. Closes on link click, Escape, or growing past the mobile breakpoint.
   const toggle = $("[data-nav-toggle]");
-  toggle?.addEventListener("click", () => {
-    const open = root.classList.toggle("nav-open");
-    toggle.setAttribute("aria-expanded", open);
-  });
-  $$("[data-nav] a").forEach((a) => a.addEventListener("click", () => {
-    root.classList.remove("nav-open");
-    toggle?.setAttribute("aria-expanded", "false");
-  }));
+  if (toggle && header) {
+    const nav = machine(header, "closed", { closed: { toggle: "open" }, open: { toggle: "closed", close: "closed" } }, (s) => {
+      root.classList.toggle("nav-open", s === "open");
+      toggle.setAttribute("aria-expanded", s === "open");
+      $(".sr-only", toggle).textContent = s === "open" ? "Close menu" : "Menu";
+    });
+    toggle.addEventListener("click", () => nav.send("toggle"));
+    $$("[data-nav] a").forEach((a) => a.addEventListener("click", () => nav.send("close")));
+    addEventListener("keydown", (e) => { if (e.key === "Escape" && nav.send("close")) toggle.focus(); });
+    matchMedia("(min-width: 761px)").addEventListener("change", (e) => e.matches && nav.send("close"));
+  }
 
   // ---------- reveal on scroll ----------
   const settle = (el) => el.addEventListener("transitionend", () => el.classList.add("settled"), { once: true });
@@ -77,17 +99,21 @@
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
   }));
 
-  // ---------- lightweight YouTube facade (home feature) ----------
-  $$(".lite-yt").forEach((box) => box.addEventListener("click", () => {
-    if (box.querySelector("iframe")) return;
-    const f = document.createElement("iframe");
-    f.src = `https://www.youtube.com/embed/${box.dataset.yt}?autoplay=1&rel=0`;
-    f.title = box.dataset.title || "YouTube video";
-    f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-    f.allowFullscreen = true;
-    box.append(f);
-    box.querySelector(".lite-play")?.remove();
-  }));
+  // ---------- lightweight YouTube facade (home feature): poster -> playing ----------
+  $$(".lite-yt").forEach((box) => {
+    const player = machine(box, "poster", { poster: { play: "playing" } }, (s) => {
+      if (s !== "playing") return;
+      const f = document.createElement("iframe");
+      f.src = `https://www.youtube.com/embed/${box.dataset.yt}?autoplay=1&rel=0`;
+      f.title = box.dataset.title || "YouTube video";
+      f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      f.allowFullscreen = true;
+      box.append(f);
+      box.querySelector(".lite-play")?.remove();
+      f.focus();
+    });
+    box.addEventListener("click", () => player.send("play"));
+  });
 
   // ---------- count up ----------
   const cio = new IntersectionObserver((entries) => {
@@ -107,6 +133,8 @@
   if (!reduced) $$("[data-count-to]").forEach((el) => cio.observe(el));
 
   // ---------- library: filter, search, sort ----------
+  // The view is one state object, { filter, q, sort }, mirrored to the URL (?c=&q=&sort=) so any view
+  // can be bookmarked, shared or reloaded, and to data-view-filter/-q/-sort/-shown on the library.
   const lib = $("[data-library]");
   if (lib) {
     const gridEl = $("[data-grid]", lib);
@@ -116,14 +144,23 @@
     const countEl = $("[data-count]", lib);
     const empty = $("[data-empty]", lib);
     const scoped = !!lib.dataset.scope; // category pages: chips navigate normally
+    const sorts = [...sort.options].map((o) => o.value);
+    const filters = new Set(["all", ...$$("[data-chips] .chip", lib).map((ch) => ch.dataset.filter)]);
     const params = new URLSearchParams(location.search);
-    let filter = (!scoped && params.get("c")) || "all";
-    if (params.get("q")) search.value = params.get("q");
+    const view = {
+      filter: !scoped && filters.has(params.get("c")) ? params.get("c") : "all",
+      q: params.get("q") || "",
+      sort: sorts.includes(params.get("sort")) ? params.get("sort") : sorts[0],
+    };
+    search.value = view.q;
+    sort.value = view.sort;
 
     const apply = (animate = true) => {
-      const q = search.value.trim().toLowerCase();
-      const terms = q.split(/\s+/).filter(Boolean);
-      const key = sort.value;
+      view.q = search.value.trim();
+      view.sort = sort.value;
+      const { filter } = view;
+      const terms = view.q.toLowerCase().split(/\s+/).filter(Boolean);
+      const key = view.sort;
       const sorted = [...cards].sort((a, b) => {
         const d = (k) => +b.dataset[k] - +a.dataset[k];
         return key === "views" ? d("views") : key === "dur" ? d("dur") : key === "old" ? -d("date") : d("date");
@@ -144,18 +181,19 @@
       });
       countEl.textContent = `Showing ${shown} of ${cards.length} videos`;
       empty.hidden = shown > 0;
-      if (!scoped) {
-        $$("[data-chips] .chip").forEach((ch) => ch.setAttribute("aria-current", ch.dataset.filter === filter ? "true" : "false"));
-        const u = new URL(location.href);
-        filter === "all" ? u.searchParams.delete("c") : u.searchParams.set("c", filter);
-        q ? u.searchParams.set("q", q) : u.searchParams.delete("q");
-        history.replaceState(null, "", u);
-      }
+      Object.assign(lib.dataset, { viewFilter: filter, viewQ: view.q, viewSort: view.sort, viewShown: shown });
+      if (!scoped) $$("[data-chips] .chip").forEach((ch) => ch.setAttribute("aria-current", ch.dataset.filter === filter ? "true" : "false"));
+      const u = new URL(location.href);
+      const setParam = (k, v, dflt) => (v && v !== dflt ? u.searchParams.set(k, v) : u.searchParams.delete(k));
+      if (!scoped) setParam("c", filter, "all");
+      setParam("q", view.q);
+      setParam("sort", view.sort, sorts[0]);
+      if (u.href !== location.href) history.replaceState(null, "", u);
     };
 
     if (!scoped) $$("[data-chips] .chip", lib).forEach((ch) => ch.addEventListener("click", (e) => {
       e.preventDefault();
-      filter = ch.dataset.filter;
+      view.filter = ch.dataset.filter;
       ch.scrollIntoView({ behavior: reduced ? "auto" : "smooth", inline: "center", block: "nearest" });
       apply();
     }));
@@ -165,33 +203,62 @@
     apply(false);
   }
 
-  // ---------- description expand ----------
-  $$("[data-desc]").forEach((d) => {
+  // ---------- description: short (fits, no toggle) | collapsed <-> expanded ----------
+  $$("[data-desc]").forEach((d, i) => {
     const body = $(".desc-body", d);
-    if (body.scrollHeight <= body.clientHeight + 8) d.classList.add("short");
-    $("[data-desc-toggle]", d).addEventListener("click", (e) => {
-      const open = d.classList.toggle("open");
-      e.currentTarget.textContent = open ? "Show less" : "Show more";
+    const btn = $("[data-desc-toggle]", d);
+    body.id ||= `desc-body-${i}`;
+    btn.setAttribute("aria-controls", body.id);
+    const fits = body.scrollHeight <= body.clientHeight + 8;
+    const desc = machine(d, fits ? "short" : "collapsed", { collapsed: { toggle: "expanded" }, expanded: { toggle: "collapsed" } }, (s) => {
+      d.classList.toggle("short", s === "short");
+      d.classList.toggle("open", s === "expanded");
+      btn.textContent = s === "expanded" ? "Show less" : "Show more";
+      btn.setAttribute("aria-expanded", s === "expanded");
+    });
+    btn.addEventListener("click", () => desc.send("toggle"));
+  });
+
+  // ---------- share: idle -> sharing -> idle | copied | failed -> idle ----------
+  $$("[data-share]").forEach((b) => {
+    const { url, title } = b.dataset;
+    const label = $("span", b);
+    const text = { idle: "Share", sharing: "Share", copied: "Link copied", failed: "Couldn’t copy link" };
+    let reset;
+    const share = machine(b, "idle", {
+      idle: { share: "sharing" },
+      sharing: { done: "idle", copied: "copied", failed: "failed" },
+      copied: { share: "sharing", reset: "idle" },
+      failed: { share: "sharing", reset: "idle" },
+    }, (s) => {
+      label.textContent = text[s];
+      b.setAttribute("aria-busy", s === "sharing");
+      clearTimeout(reset);
+      if (s === "copied" || s === "failed") reset = setTimeout(() => share.send("reset"), 2200);
+    });
+    b.addEventListener("click", async () => {
+      if (!share.send("share")) return; // already sharing
+      if (navigator.share) {
+        // Dismissing the share sheet rejects with AbortError; either way we're back to idle.
+        try { await navigator.share({ url, title }); } catch {}
+        return share.send("done");
+      }
+      try { await navigator.clipboard.writeText(url); share.send("copied"); } catch { share.send("failed"); }
     });
   });
 
-  // ---------- share ----------
-  $$("[data-share]").forEach((b) => b.addEventListener("click", async () => {
-    const { url, title } = b.dataset;
-    const label = $("span", b);
-    try {
-      if (navigator.share) await navigator.share({ url, title });
-      else { await navigator.clipboard.writeText(url); label.textContent = "Link copied"; setTimeout(() => (label.textContent = "Share"), 2200); }
-    } catch {}
-  }));
-
   // ---------- contact form ----------
+  // idle | invalid | unconfigured | failed --submit--> (invalid | unconfigured | sending)
+  // sending --> sent (final) | failed. While sending or sent, further submits (Enter key included) are ignored.
   const form = $("[data-contact]");
   if (form) {
     const type = $("[data-type]", form);
     const budget = $("[data-budget]", form);
     const status = $("[data-status]", form);
+    const submitBtn = $("[data-submit]", form);
+    const done = $("[data-done]", form);
     const endpoint = form.dataset.endpoint;
+    const TIMEOUT_MS = 20000;
     form.started.value = Date.now();
     const preset = new URLSearchParams(location.search).get("type");
     if (preset && [...type.options].some((o) => o.value === preset)) type.value = preset;
@@ -199,34 +266,54 @@
     type.addEventListener("change", syncBudget);
     syncBudget();
 
+    const messages = {
+      invalid: "Please fill in the highlighted fields.",
+      unconfigured: "The contact form isn’t connected yet. Please check back soon.",
+      failed: "Something went wrong sending your message. Please try again in a moment.",
+    };
+    const retry = { invalid: "invalid", unconfigured: "unconfigured", send: "sending" };
+    const contact = machine(form, "idle", {
+      idle: retry, invalid: retry, unconfigured: retry, failed: retry,
+      sending: { ok: "sent", fail: "failed" },
+      sent: {},
+    }, (s, focusEl) => {
+      status.textContent = messages[s] || "";
+      status.classList.toggle("error", s in messages);
+      form.classList.toggle("sending", s === "sending");
+      form.setAttribute("aria-busy", s === "sending");
+      submitBtn.disabled = s === "sending" || s === "sent";
+      done.hidden = s !== "sent";
+      if (s === "sent") done.setAttribute("tabindex", "-1"), done.focus();
+      focusEl?.focus();
+    });
+
     form.addEventListener("input", (e) => e.target.closest(".field")?.classList.remove("invalid"));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      status.textContent = ""; status.classList.remove("error");
+      if (contact.state === "sending" || contact.state === "sent") return;
       let bad = null;
       $$("[required]", form).forEach((el) => {
         const ok = el.checkValidity() && el.value.trim();
         el.closest(".field")?.classList.toggle("invalid", !ok);
         if (!ok && !bad) bad = el;
       });
-      if (bad) { bad.focus(); status.textContent = "Please fill in the highlighted fields."; status.classList.add("error"); return; }
-      if (!endpoint) { status.textContent = "The contact form isn’t connected yet. Please check back soon."; status.classList.add("error"); return; }
+      if (bad) return contact.send("invalid", bad);
+      if (!endpoint) return contact.send("unconfigured");
 
       const fd = new FormData(form);
       fd.set("inquiry_type", type.options[type.selectedIndex].text);
-      form.classList.add("sending");
+      contact.send("send");
       try {
         // A url-encoded body keeps this a "simple" request, which Google Apps Script accepts cross-origin.
-        const r = await fetch(endpoint, { method: "POST", body: new URLSearchParams(fd) });
+        // The timeout stops a hung request from leaving the form stuck in "sending".
+        const r = await fetch(endpoint, { method: "POST", body: new URLSearchParams(fd), signal: AbortSignal.timeout?.(TIMEOUT_MS) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || j.success === false) throw new Error(j.message || "Send failed");
-        $("[data-done]", form).hidden = false;
         form.reset();
-      } catch (err) {
-        status.textContent = "Something went wrong sending your message. Please try again in a moment.";
-        status.classList.add("error");
-      } finally {
-        form.classList.remove("sending");
+        syncBudget();
+        contact.send("ok");
+      } catch {
+        contact.send("fail", submitBtn);
       }
     });
   }

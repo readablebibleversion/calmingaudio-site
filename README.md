@@ -65,6 +65,20 @@ Until the URL is set, the form shows a friendly "not connected yet" message inst
 
 Spam protection is built in: a hidden field that bots fill in, and a check that rejects forms submitted faster than a person could type.
 
+## Interactive states
+
+Each interactive widget in `src/assets/app.js` is a small explicit state machine built with the `machine()` helper. Its current state is always on the element as `data-state`, so CSS, tests and AI agents can read it, and a widget only accepts the moves its current state allows.
+
+| Widget | Element | States |
+| --- | --- | --- |
+| Mobile menu | `[data-header]` | `closed` ⇄ `open` (closes on link click, Escape, or widening past mobile) |
+| Contact form | `[data-contact]` | `idle`, `invalid`, `unconfigured`, `sending` → `sent` (final) or `failed`. Submits during `sending`/`sent` are ignored, so a message is never sent twice; requests time out after 20 seconds |
+| Description | `[data-desc]` | `short` (fits, no toggle), or `collapsed` ⇄ `expanded` |
+| Share button | `[data-share]` | `idle` → `sharing` → `copied` / `failed` → `idle` |
+| Home video | `.lite-yt` | `poster` → `playing` |
+
+The video library keeps its view (`filter`, `q`, `sort`) in the URL as `?c=&q=&sort=`, so any filtered view can be bookmarked or shared, and mirrors it to `data-view-filter`, `data-view-q`, `data-view-sort` and `data-view-shown` on `[data-library]`.
+
 ## Editing categories
 
 Edit `categories.json`. Each category has a `match` pattern that is checked against video titles. A video can be in several categories. The first match, in file order, is its main category. To force a video in or out of a category, add its YouTube id to that category's `"pin": [...]` or `"exclude": [...]`. The build log lists any video that matched no category.

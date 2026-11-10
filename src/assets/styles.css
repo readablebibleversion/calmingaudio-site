@@ -336,6 +336,8 @@ p { margin: 0; }
   .nav-open .site-nav > a { opacity: 1 !important; transform: none; }
   .nav-open .site-nav > a:nth-child(2) { transition-delay: 0.07s; }
   .nav-open .site-nav > a:nth-child(3) { transition-delay: 0.14s; }
+  .nav-open .site-nav > a:nth-child(4) { transition-delay: 0.21s; }
+  .nav-open .site-nav > a:nth-child(5) { transition-delay: 0.28s; }
   .nav-open { overflow: hidden; }
   .nav-open .site-header { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .hero { min-height: auto; padding-top: 10px; }
