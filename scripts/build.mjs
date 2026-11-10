@@ -604,8 +604,8 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   <div class="partner" data-reveal data-glow>
     <div>
       <p class="eyebrow">Plans</p>
-      <h2>Monthly, Annual or Family.</h2>
-      <p class="muted">${esc(APP)} offers Monthly, Annual and Family subscriptions, plus one-time purchases, all handled securely by Apple. Cancel anytime in your App Store settings.</p>
+      <h2>Weekly, Monthly, Annual, Family or Lifetime.</h2>
+      <p class="muted">${esc(APP)} offers Weekly, Monthly, Annual and Family subscriptions, plus a one-time Lifetime purchase, all handled securely by Apple. Cancel anytime in your App Store settings.</p>
       <div class="row">${appCta()}</div>
     </div>
     <ul class="app-help">
@@ -621,20 +621,20 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
 // Sleep Worlds app pages. The iOS app links to these exact addresses, so keep the paths.
 {
   const SUPPORT_EMAIL = "calmingaudio@gmail.com";
-  const EFFECTIVE = "November 9, 2026";
-  const EFFECTIVE_ISO = "2026-11-09";
   const mail = `<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`;
   const appLinks = `<p class="legal-links"><a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a> · <a href="/support/">Support</a></p>`;
+  // effective: ISO date shown as "Effective" at the top; update it whenever the policy changes.
+  const fmtLongDate = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   const legal = (slug, title, description, effective, content) => {
     const p = `/${slug}/`;
     page(p, layout({
       title, pathname: p, description,
-      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: EFFECTIVE_ISO, dateModified: EFFECTIVE_ISO }) }), breadcrumbLd([["Home", "/"], [title, p]])],
+      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
       body: `<section class="page-head"><div class="wrap">
   <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(title)}</span></nav>
   <p class="eyebrow" data-reveal>${APP} app</p>
   <h1 data-reveal>${esc(title)}</h1>
-  ${effective ? `<p class="muted" data-reveal>Effective: <time datetime="${EFFECTIVE_ISO}">${EFFECTIVE}</time></p>` : ""}
+  ${effective ? `<p class="muted" data-reveal>Effective: <time datetime="${effective}">${fmtLongDate(effective)}</time></p>` : ""}
 </div></section>
 <section class="section section-tight"><div class="wrap"><article class="prose" data-reveal>
 ${content}
@@ -643,7 +643,7 @@ ${appLinks}
     }));
   };
 
-  legal("privacy", `${APP} Privacy Policy`, `How the ${APP} app by Calming Audio handles your information: no ads, no tracking, optional accounts, and purchases handled by Apple.`, true, `
+  legal("privacy", `${APP} Privacy Policy`, `How the ${APP} app by Calming Audio handles your information: no ads, no tracking, optional accounts, and purchases handled by Apple.`, "2026-11-10", `
 <p>${APP} is an app by Calming Audio LLC (“we”, “us”). This policy explains what information the app uses, why, and the choices you have.</p>
 
 <h2>The short version</h2>
@@ -670,6 +670,14 @@ ${appLinks}
 
 <h2>Notifications and alarms</h2>
 <p>If you turn on alarms or bedtime reminders, they are scheduled on your phone. We don’t receive them.</p>
+
+<h2>Apple Health</h2>
+<p>Apple Health is optional and off until you turn it on in <strong>Settings → Apple Health</strong>. If you do:</p>
+<ul>
+  <li>${APP} saves your breathing before sleep to Apple Health as Mindful Minutes.</li>
+  <li>${APP} reads your sleep from Apple Health (recorded by an Apple Watch or your iPhone) to show how long you slept on the morning card.</li>
+</ul>
+<p>Your Health data stays on your phone. We never send it to our servers, our account provider, RevenueCat or anyone else, and we never use it for advertising or marketing. You can change what ${APP} can see or save at any time in the Health app under <strong>Sharing → Apps → ${APP}</strong>.</p>
 
 <h2>Microphone</h2>
 <p>${APP} never records audio. iOS may show a microphone notice because an audio library inside the app contains microphone code. The app never turns the microphone on.</p>
@@ -698,13 +706,13 @@ ${appLinks}
 <h2>Contact</h2>
 <p>Calming Audio LLC<br>${mail}</p>`);
 
-  legal("terms", `${APP} Terms of Use`, `Terms of use for the ${APP} app by Calming Audio, including how subscriptions, renewals, cancellations and refunds work.`, true, `
+  legal("terms", `${APP} Terms of Use`, `Terms of use for the ${APP} app by Calming Audio, including how subscriptions, renewals, cancellations and refunds work.`, "2026-11-09", `
 <p>${APP} is provided by Calming Audio LLC. Your use of the app is governed by Apple’s Licensed Application End User License Agreement (the “Standard EULA”):</p>
 <p><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</a></p>
 
 <h2>Subscriptions</h2>
 <ul>
-  <li>${APP} offers Monthly, Annual and Family subscriptions, and one-time purchases.</li>
+  <li>${APP} offers Weekly, Monthly, Annual and Family subscriptions, and one-time Lifetime purchases.</li>
   <li>Payment is charged to your Apple Account when you confirm the purchase.</li>
   <li>Subscriptions renew automatically unless you cancel at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours before the period ends.</li>
   <li>If a free trial is offered, any unused part of it ends when you buy a subscription.</li>
@@ -718,7 +726,7 @@ ${appLinks}
 <h2>Contact</h2>
 <p>${mail}</p>`);
 
-  legal("support", `${APP} Support`, `Get help with the ${APP} app: restore purchases, cancel a subscription, delete your account, fix alarms, or email Calming Audio support.`, false, `
+  legal("support", `${APP} Support`, `Get help with the ${APP} app: restore purchases, cancel a subscription, delete your account, fix alarms, or email Calming Audio support.`, "", `
 <p class="lede">Need help with ${APP}? Email us at ${mail} and we’ll get back to you.</p>
 
 <h2>Common questions</h2>
