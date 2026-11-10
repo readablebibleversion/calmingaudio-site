@@ -11,7 +11,11 @@
   "hiddenVideoIds": [],
   "featuredVideoId": "",
   "app": {
-    "name": "Sleep Worlds",
+    "name": "Sleep Destinations",
+    "path": "/sleep-destinations/",
+    "oldPaths": [
+      "/sleep-worlds/"
+    ],
     "appStoreUrl": ""
   }
 }

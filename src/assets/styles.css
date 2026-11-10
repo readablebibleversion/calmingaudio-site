@@ -352,7 +352,7 @@ p { margin: 0; }
 .footer-legal a { color: var(--text); }
 .footer-legal a:hover { color: var(--moon); }
 
-/* Long-form text pages (Sleep Worlds privacy, terms, support) */
+/* Long-form text pages (app privacy, terms, support) */
 .prose { max-width: 72ch; color: #c3cde0; font-size: 1.02rem; line-height: 1.75; }
 .prose h2 { font-size: clamp(1.35rem, 2.4vw, 1.75rem); color: var(--text); margin: 2.2em 0 0.6em; }
 .prose p, .prose ul { margin: 0 0 1.1em; }
@@ -369,7 +369,7 @@ p { margin: 0; }
 .prose tr:last-child td { border-bottom: 0; }
 .legal-links { margin-top: 2.6em !important; padding-top: 1.4em; border-top: 1px solid var(--line); color: var(--muted); }
 
-/* Sleep Worlds app */
+/* App page and home promo */
 .btn-soon { background: rgba(160, 190, 255, 0.08); border: 1px solid var(--line-strong); color: var(--text); cursor: default; }
 .app-promo { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; padding: clamp(28px, 5vw, 60px); border-radius: calc(var(--radius) + 10px); background: linear-gradient(135deg, rgba(75, 58, 143, 0.32), rgba(20, 60, 110, 0.32)); border: 1px solid var(--line-strong); }
 .app-promo > div:first-child { display: grid; gap: 18px; justify-items: start; }

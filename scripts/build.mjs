@@ -103,8 +103,10 @@ const icons = {
 
 const logo = `<span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
 
-// Sleep Worlds iOS app. Until config.app.appStoreUrl is set, it's shown as "coming soon".
-const APP = config.app?.name || "Sleep Worlds";
+// The Calming Audio iOS app. Until config.app.appStoreUrl is set, it's shown as "coming soon".
+// config.app.oldPaths are earlier addresses of the app page; each one redirects to config.app.path.
+const APP = config.app?.name || "Sleep Destinations";
+const APP_PATH = config.app?.path || "/sleep-destinations/";
 const APP_URL = config.app?.appStoreUrl || "";
 const appleIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.3-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4zM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>';
 const appCta = (extra = "") => APP_URL
@@ -130,7 +132,7 @@ function header(active) {
     <nav id="site-nav" class="site-nav" data-nav>
       ${link("/videos/", "All videos", "videos")}
       ${link("/categories/", "Categories", "categories")}
-      ${link("/sleep-worlds/", "App", "app")}
+      ${link(APP_PATH, "App", "app")}
       ${link("/contact/", "Sponsorships", "contact")}
       <a class="btn btn-sub" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Subscribe</span></a>
     </nav>
@@ -160,7 +162,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">Sleep Worlds app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">${esc(APP)} app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
 </footer>`;
 }
 
@@ -374,7 +376,7 @@ const page = (pathname, html) => pages.push([pathname, html]);
         <p class="eyebrow">${APP_URL ? "New on iPhone" : "Coming soon to iPhone"}</p>
         <h2>Meet <em>${esc(APP)}</em>, our sleep app.</h2>
         <p class="muted">Pick a world, set a sleep timer and drift off to calm scenes and sound. Wake to a gentle alarm, and collect stamps and postcards for every night you spend in each world.</p>
-        <div class="row">${appCta()}<a class="btn btn-ghost" href="/sleep-worlds/"><span>Learn more</span>${icons.arrow}</a></div>
+        <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>Learn more</span>${icons.arrow}</a></div>
       </div>
       ${appPhone}
     </div>
@@ -565,9 +567,9 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   }));
 }
 
-// Sleep Worlds app landing page
+// App landing page
 {
-  const p = "/sleep-worlds/";
+  const p = APP_PATH;
   const description = `${APP} is the Calming Audio sleep app for iPhone: calm worlds of scene and sound, a sleep timer, gentle alarms, and stamps for every night. ${APP_URL ? "Available now." : "Coming soon."}`;
   const features = [
     ["🌙", "Choose a world", "Each world pairs a calm scene with soothing sound. Pick one for tonight and let it play."],
@@ -618,7 +620,7 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   }));
 }
 
-// Sleep Worlds app pages. The iOS app links to these exact addresses, so keep the paths.
+// App privacy, terms and support pages. The iOS app links to these exact addresses, so keep the paths.
 {
   const SUPPORT_EMAIL = "calmingaudio@gmail.com";
   const mail = `<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`;
@@ -755,6 +757,29 @@ for (const [p, html] of pages) {
 }
 await writeFile(path.join(out, "404.html"), notFound);
 
+// Old addresses of renamed pages. GitHub Pages has no server redirects, so each old path gets a tiny page
+// that forwards instantly (an instant meta refresh, which Google treats as a permanent redirect) and keeps
+// any ?query or #hash. These pages are left out of the sitemap.
+const redirects = Object.fromEntries((config.app?.oldPaths || []).map((p) => [p, APP_PATH]));
+for (const [from, to] of Object.entries(redirects)) {
+  const target = abs(to);
+  await mkdir(path.join(out, from), { recursive: true });
+  await writeFile(path.join(out, from, "index.html"), `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moved to ${esc(target)}</title>
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="${target}">
+<meta http-equiv="refresh" content="0; url=${target}">
+<script>location.replace(${JSON.stringify(to)} + location.search + location.hash)</script>
+</head>
+<body style="background:#060912;color:#e9eef8;font-family:system-ui,sans-serif;padding:40px">
+<p>This page has moved to <a href="${target}" style="color:#9fdcef">${esc(target)}</a>.</p>
+</body>
+</html>`);
+}
+
 // Sitemap with video extensions so Google can attach each video to its page.
 const xml = (s) => esc(String(s)).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
 // lastmod only moves when content really changes (a new upload), so search engines keep trusting it.
@@ -812,7 +837,7 @@ const llms = `${llmsIntro}
 - [All videos](${abs("/videos/")}): the full library, searchable and sortable
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
-- [${APP} app](${abs("/sleep-worlds/")}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
+- [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories
