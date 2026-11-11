@@ -105,8 +105,8 @@ const logo = `<span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i
 
 // The Calming Audio iOS app. Until config.app.appStoreUrl is set, it's shown as "coming soon".
 // config.app.oldPaths are earlier addresses of the app page; each one redirects to config.app.path.
-const APP = config.app?.name || "Sleep Destinations";
-const APP_PATH = config.app?.path || "/sleep-destinations/";
+const APP = config.app?.name || "Sleep Globes";
+const APP_PATH = config.app?.path || "/sleep-globes/";
 const APP_URL = config.app?.appStoreUrl || "";
 const appleIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.3-1.2 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4zM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>';
 const appCta = (extra = "") => APP_URL
@@ -375,7 +375,7 @@ const page = (pathname, html) => pages.push([pathname, html]);
         <p class="eyebrow">${APP_URL ? "New on iPhone" : "Coming soon to iPhone"}</p>
         <h2>Meet <em>${esc(APP)}</em>, our sleep app.</h2>
         <p class="muted">Fall asleep in a different room every night: a cabin in the woods, a medieval castle, a palace courtyard, a Nordic longhouse. Mix in rain, fans or soft noise, set a timer that fades out, and wake to a gentle alarm.</p>
-        <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>See the destinations</span>${icons.arrow}</a></div>
+        <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>Take a look inside</span>${icons.arrow}</a></div>
       </div>
       <div class="app-shot-wrap">${appShot("cabin")}</div>
     </div>
@@ -575,18 +575,18 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     ["🎚️", "Mix in the sounds you love", "Set the music and the room’s own sound, then mix in white, pink or brown noise over any world."],
     ["🌘", "Fades out as you drift off", "Pick a timer and the sound fades out on its own, while the screen fades to black so it never keeps you up."],
     ["⏰", "Gentle alarms & bedtime reminders", "Wake up softly, and get a nudge when it’s time to wind down. Everything is scheduled right on your phone."],
-    ["✉️", "Stamps & postcards", "Every night you spend in a destination counts. Collect stamps, postcards and rewards along the way."],
+    ["✉️", "Stamps & postcards", "Every night you spend in a room counts. Collect stamps, postcards and rewards along the way."],
     ["🔒", "Private by design", "No account needed, no ads and no tracking across apps. Sign in only if you want your progress on a new phone."],
   ];
-  const destinations = ["a Japanese garden room", "an Arabian palace courtyard", "an Arctic cabin under the northern lights", "a Nordic longhouse", "a room beneath the sea"];
+  const rooms = ["a Japanese garden room", "an Arabian palace courtyard", "an Arctic cabin under the northern lights", "a Nordic longhouse", "a room beneath the sea"];
   page(p, layout({
     title: `${APP}: the Calming Audio sleep app`, active: "app", pathname: p, description,
-    ogImage: abs("/assets/app/og-sleep-destinations.jpg"), ogImageWidth: 1200, ogImageHeight: 630,
+    ogImage: abs("/assets/app/og-app.jpg"), ogImageWidth: 1200, ogImageHeight: 630,
     ogImageAlt: `Four ${APP} app screens: Arabian Courtyard Palace, the Nordic Longhouse sound mixer, Medieval Castle and Cabin in the Woods`,
     ld: [
       { "@context": "https://schema.org", "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication",
         description, url: abs(p), publisher: publisherRef, author: publisherRef,
-        screenshot: Object.keys(appShots).map((n) => abs(`/assets/app/shot-${n}.webp`)), image: abs("/assets/app/og-sleep-destinations.jpg"),
+        screenshot: Object.keys(appShots).map((n) => abs(`/assets/app/shot-${n}.webp`)), image: abs("/assets/app/og-app.jpg"),
         ...(APP_URL ? { downloadUrl: APP_URL, installUrl: APP_URL } : {}) },
       webPage("WebPage", `${APP}: the Calming Audio sleep app`, description, p, { about: { "@type": "MobileApplication", name: APP } }),
       breadcrumbLd([["Home", "/"], [APP, p]]),
@@ -603,8 +603,8 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
 </div></section>
 <section class="section section-tight"><div class="wrap">
   <figure class="app-strip" data-reveal>
-    <img src="/assets/app/destinations.webp" srcset="/assets/app/destinations-1000.webp 1000w, /assets/app/destinations.webp 2000w" sizes="(max-width: 1240px) 100vw, 1200px" width="2000" height="857" loading="lazy" decoding="async" alt="Five ${esc(APP)} destinations side by side: ${destinations.join(", ")}">
-    <figcaption><span class="eyebrow">The destinations</span><span>Castles, palaces, cabins, the Arctic and beyond.</span></figcaption>
+    <img src="/assets/app/rooms.webp" srcset="/assets/app/rooms-1000.webp 1000w, /assets/app/rooms.webp 2000w" sizes="(max-width: 1240px) 100vw, 1200px" width="2000" height="857" loading="lazy" decoding="async" alt="Five ${esc(APP)} rooms side by side: ${rooms.join(", ")}">
+    <figcaption><span class="eyebrow">The rooms</span><span>Castles, palaces, cabins, the Arctic and beyond.</span></figcaption>
   </figure>
 </div></section>
 <section class="section section-tight"><div class="wrap">
