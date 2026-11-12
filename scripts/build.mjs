@@ -161,7 +161,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">${esc(APP)} app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">${esc(APP)} app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal">Moonhum app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span></div>
 </footer>`;
 }
 
@@ -640,20 +640,21 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   const appLinks = `<p class="legal-links"><a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a> · <a href="/support/">Support</a></p>`;
   // effective: ISO date shown as "Effective" at the top; update it whenever the policy changes.
   const fmtLongDate = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-  const legal = (slug, title, description, effective, content) => {
+  // app/links: which app the page belongs to and the related-page links at the bottom (Sleep Globes by default).
+  const legal = (slug, title, description, effective, content, { app = APP, links = appLinks } = {}) => {
     const p = `/${slug}/`;
     page(p, layout({
       title, pathname: p, description,
-      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
+      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: app, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
       body: `<section class="page-head"><div class="wrap">
   <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(title)}</span></nav>
-  <p class="eyebrow" data-reveal>${APP} app</p>
+  <p class="eyebrow" data-reveal>${esc(app)} app</p>
   <h1 data-reveal>${esc(title)}</h1>
   ${effective ? `<p class="muted" data-reveal>Effective: <time datetime="${effective}">${fmtLongDate(effective)}</time></p>` : ""}
 </div></section>
 <section class="section section-tight"><div class="wrap"><article class="prose" data-reveal>
 ${content}
-${appLinks}
+${links}
 </article></div></section>`,
     }));
   };
@@ -751,6 +752,61 @@ ${appLinks}
   <li><strong>Delete your account:</strong> open the app, go to Settings → Account → Delete account.</li>
   <li><strong>The alarm didn’t sound:</strong> check that ${APP} is allowed to use Alarms in iPhone Settings, and that your phone’s volume is up.</li>
 </ul>`);
+
+  // Moonhum: a separate free app with no accounts, purchases or network use. App Store Connect links to these
+  // exact addresses, and its App Privacy answer is "Data Not Collected", so keep this policy in step with the app.
+  // No terms page: Moonhum is free, so Apple's standard EULA applies.
+  const MH = "Moonhum";
+  const mhLinks = `<p class="legal-links"><a href="/moonhum/privacy/">Privacy Policy</a> · <a href="/moonhum/support/">Support</a></p>`;
+  legal("moonhum/privacy", `${MH} Privacy Policy`, `${MH} by Calming Audio collects no information: no account, no ads, no analytics, no tracking, and nothing leaves your phone.`, "2026-11-12", `
+<p>${MH} is an app by Calming Audio LLC (“we”, “us”). This policy explains what information the app uses. The short answer: none.</p>
+
+<h2>The short version</h2>
+<ul>
+  <li>${MH} collects no information about you. There’s no account, no sign-up, no ads, no analytics and no tracking.</li>
+  <li>Every sound is stored in the app on your phone. Nothing is streamed, and the app doesn’t send anything to us or anyone else.</li>
+  <li>We don’t sell or share any information, because we don’t have any.</li>
+</ul>
+
+<h2>Information that stays on your phone</h2>
+<p>So the app can remember how you like it, these are saved on your device only:</p>
+<ul>
+  <li>your sound levels, pinned sounds and saved mixes</li>
+  <li>your sleep timer, playback and alarm settings</li>
+  <li>a count of how many times you’ve listened, used only to decide when to ask for a rating</li>
+</ul>
+<p>We can’t see any of this. It’s removed when you delete the app. If you back up your iPhone, it may be included in your iCloud or computer backup, which Apple manages.</p>
+
+<h2>Alarms</h2>
+<p>If you turn on the wake-up alarm, iOS asks for permission to set alarms. The alarm is scheduled and run by iOS on your phone.</p>
+
+<h2>Siri, Shortcuts, widgets and Control Center</h2>
+<p>These work on your device. When you use one, the app only learns which mix to play.</p>
+
+<h2>Ratings</h2>
+<p>The app may ask you to rate it. Apple shows the rating window and handles your rating and review under Apple’s privacy policy.</p>
+
+<h2>Children</h2>
+<p>${MH} is suitable for all ages. It collects no personal information from anyone, including children.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy, we’ll update the date at the top. If the app ever starts collecting information, we’ll say so here before it does.</p>
+
+<h2>Contact</h2>
+<p>Calming Audio LLC<br>${mail}</p>`, { app: MH, links: mhLinks });
+
+  legal("moonhum/support", `${MH} Support`, `Get help with ${MH}: no sound, playing with podcasts, alarms, saving mixes, and starting sleep from the Lock Screen, Control Center or Siri.`, "", `
+<p class="lede">Need help with ${MH}? Email us at ${mail} and we’ll get back to you.</p>
+
+<h2>Common questions</h2>
+<ul>
+  <li><strong>No sound:</strong> check the volume buttons, and that the sound card you want shows a percentage (tap it to turn it on). ${MH} plays even with the Silent switch on.</li>
+  <li><strong>The sound stops when I play a podcast:</strong> open ${MH} → Settings → turn on <strong>Play with other audio</strong>.</li>
+  <li><strong>The alarm didn’t sound:</strong> the wake-up alarm needs iOS 26 or later. Check that ${MH} is allowed to use Alarms in the iPhone Settings app, and that the alarm is switched on in ${MH} → Settings.</li>
+  <li><strong>Save a mix:</strong> turn on the sounds you like, then tap <strong>Save mix</strong> in the Mixes row. Press and hold a saved mix to rename or delete it.</li>
+  <li><strong>Start sleeping from the Lock Screen:</strong> add the ${MH} widget to your Lock Screen or Home Screen, add the “Start sleeping” control to Control Center, or say “Start sleeping with ${MH}” to Siri.</li>
+  <li><strong>Does it cost anything?</strong> No. ${MH} is free, with no ads and no in-app purchases.</li>
+</ul>`, { app: MH, links: mhLinks });
 }
 
 // 404
@@ -851,6 +907,7 @@ const llms = `${llmsIntro}
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
 - [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
+- Moonhum app: a free Calming Audio sleep-sounds app for iPhone that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories

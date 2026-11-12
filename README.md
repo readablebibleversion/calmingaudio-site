@@ -91,4 +91,6 @@ Edit `categories.json`. Each category has a `match` pattern that is checked agai
 
 The Sleep Globes privacy, terms and support pages (`/privacy/`, `/terms/`, `/support/`) are written in `scripts/build.mjs`. The app links to those exact addresses, so keep the paths.
 
+The separate Moonhum app has its own pages at `/moonhum/privacy/` and `/moonhum/support/`, also in `scripts/build.mjs`. App Store Connect links to them and Moonhum's App Privacy answer is "Data Not Collected", so update that policy if the app ever starts collecting anything. Moonhum is free, so it needs no terms page.
+
 Video page URLs are saved in `data/videos.json`, so a page keeps its address even if you later rename the video on YouTube.
