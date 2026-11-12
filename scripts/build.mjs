@@ -161,7 +161,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">${esc(APP)} app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">Our apps: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span></div>
 </footer>`;
 }
 
@@ -636,6 +636,9 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
 // App privacy, terms and support pages. The iOS app links to these exact addresses, so keep the paths.
 {
   const SUPPORT_EMAIL = "calmingaudio@gmail.com";
+  // Every app that links to these pages. They share one privacy policy, terms and support page.
+  const LEGAL_APPS = config.legalApps || [APP, "Moonhum"];
+  const APPS = LEGAL_APPS.length > 1 ? `${LEGAL_APPS.slice(0, -1).join(", ")} and ${LEGAL_APPS.at(-1)}` : LEGAL_APPS[0];
   const mail = `<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`;
   const appLinks = `<p class="legal-links"><a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a> · <a href="/support/">Support</a></p>`;
   // effective: ISO date shown as "Effective" at the top; update it whenever the policy changes.
@@ -644,10 +647,10 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     const p = `/${slug}/`;
     page(p, layout({
       title, pathname: p, description,
-      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: APP, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
+      ld: [webPage("WebPage", title, description, p, { about: LEGAL_APPS.map((name) => ({ "@type": "MobileApplication", name, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef })), ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
       body: `<section class="page-head"><div class="wrap">
   <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(title)}</span></nav>
-  <p class="eyebrow" data-reveal>${APP} app</p>
+  <p class="eyebrow" data-reveal>${esc(APPS)} apps</p>
   <h1 data-reveal>${esc(title)}</h1>
   ${effective ? `<p class="muted" data-reveal>Effective: <time datetime="${effective}">${fmtLongDate(effective)}</time></p>` : ""}
 </div></section>
@@ -658,30 +661,30 @@ ${appLinks}
     }));
   };
 
-  legal("privacy", `${APP} Privacy Policy`, `How the ${APP} app by Calming Audio handles your information: no ads, no tracking, optional accounts, and purchases handled by Apple.`, "2026-11-10", `
-<p>${APP} is an app by Calming Audio LLC (“we”, “us”). This policy explains what information the app uses, why, and the choices you have.</p>
+  legal("privacy", `${APPS} Privacy Policy`, `How the ${APPS} apps by Calming Audio handle your information: no ads, no tracking, optional accounts, and purchases handled by Apple.`, "2026-11-12", `
+<p>${APPS} are apps by Calming Audio LLC (“we”, “us”). This policy covers both apps and explains what information they use, why, and the choices you have. Where something applies to only one app, we say so.</p>
 
 <h2>The short version</h2>
 <ul>
-  <li>You can use ${APP} without an account. If you do, everything stays on your phone.</li>
+  <li>You can use our apps without an account. If you do, everything stays on your phone.</li>
   <li>If you create an account, we keep your email address and your sleep progress so you can get it back on a new phone.</li>
   <li>Purchases are handled by Apple. We never see your card or payment details.</li>
   <li>We don’t show ads, we don’t sell your information, and we don’t track you across other apps or websites.</li>
 </ul>
 
 <h2>Information that stays on your phone</h2>
-<p>Your worlds, settings, alarms, sleep timer, the nights you’ve spent in each world, your stamps and postcards are saved on your device. We can’t see them unless you create an account.</p>
+<p>Your settings, alarms, sleep timer and progress are saved on your device. In ${APP}, that includes your worlds, the nights you’ve spent in each world, and your stamps and postcards. We can’t see them unless you create an account.</p>
 
 <h2>If you create an account</h2>
 <p>Accounts are optional. If you sign in with your email address or with Apple, we store:</p>
 <ul>
   <li><strong>Your email address</strong> (or the private relay address Apple gives us if you choose “Hide My Email”), so you can sign in.</li>
-  <li><strong>Your progress</strong>: which nights you completed, which world you slept in, how long each session lasted, and the stamps, postcards and rewards you’ve earned. This lets you keep your progress on a new phone.</li>
+  <li><strong>Your progress</strong>: which nights you completed, how long each session lasted, and the rewards you’ve earned (in ${APP}, also which world you slept in and your stamps and postcards). This lets you keep your progress on a new phone.</li>
 </ul>
 <p>This information is stored by our account provider, Supabase, on our behalf.</p>
 
 <h2>Purchases</h2>
-<p>Subscriptions and purchases are processed by Apple. We never receive your payment details. To know what you’ve bought and unlock it on your devices, we use RevenueCat, which receives your purchase history and an app user ID. If you’re signed in, that ID is your ${APP} account ID, so your purchases follow your account.</p>
+<p>Subscriptions and purchases are processed by Apple. We never receive your payment details. To know what you’ve bought and unlock it on your devices, we use RevenueCat, which receives your purchase history and an app user ID. If you’re signed in, that ID is your account ID, so your purchases follow your account.</p>
 
 <h2>Notifications and alarms</h2>
 <p>If you turn on alarms or bedtime reminders, they are scheduled on your phone. We don’t receive them.</p>
@@ -689,13 +692,13 @@ ${appLinks}
 <h2>Apple Health</h2>
 <p>Apple Health is optional and off until you turn it on in <strong>Settings → Apple Health</strong>. If you do:</p>
 <ul>
-  <li>${APP} saves your breathing before sleep to Apple Health as Mindful Minutes.</li>
-  <li>${APP} reads your sleep from Apple Health (recorded by an Apple Watch or your iPhone) to show how long you slept on the morning card.</li>
+  <li>The app saves your breathing before sleep to Apple Health as Mindful Minutes.</li>
+  <li>The app reads your sleep from Apple Health (recorded by an Apple Watch or your iPhone) to show how long you slept on the morning card.</li>
 </ul>
-<p>Your Health data stays on your phone. We never send it to our servers, our account provider, RevenueCat or anyone else, and we never use it for advertising or marketing. You can change what ${APP} can see or save at any time in the Health app under <strong>Sharing → Apps → ${APP}</strong>.</p>
+<p>Your Health data stays on your phone. We never send it to our servers, our account provider, RevenueCat or anyone else, and we never use it for advertising or marketing. You can change what each app can see or save at any time in the Health app under <strong>Sharing → Apps</strong>, then the app’s name.</p>
 
 <h2>Microphone</h2>
-<p>${APP} never records audio. iOS may show a microphone notice because an audio library inside the app contains microphone code. The app never turns the microphone on.</p>
+<p>Our apps never record audio. iOS may show a microphone notice because an audio library inside an app contains microphone code. The apps never turn the microphone on.</p>
 
 <h2>Services we use</h2>
 <div class="table-wrap"><table>
@@ -709,11 +712,11 @@ ${appLinks}
 <p>We don’t sell or share your information with anyone else, and we don’t use it for advertising.</p>
 
 <h2>Keeping and deleting your information</h2>
-<p>We keep your account information until you delete your account. You can delete it at any time in the app under <strong>Settings → Account → Delete account</strong>. This permanently removes your email address and saved progress from our account system. If you signed in with Apple, it also removes ${APP}’ access to your Apple ID.</p>
+<p>We keep your account information until you delete your account. You can delete it at any time in the app under <strong>Settings → Account → Delete account</strong>. This permanently removes your email address and saved progress from our account system. If you signed in with Apple, it also removes the app’s access to your Apple ID.</p>
 <p>To ask us to delete purchase records held by RevenueCat, or for any other privacy request, contact us at the address below.</p>
 
 <h2>Children</h2>
-<p>${APP} is not directed to children under 13, and we don’t knowingly collect personal information from them.</p>
+<p>${APPS} are not directed to children under 13, and we don’t knowingly collect personal information from them.</p>
 
 <h2>Changes</h2>
 <p>If we change this policy, we’ll update the date at the top and, for significant changes, tell you in the app.</p>
@@ -721,13 +724,13 @@ ${appLinks}
 <h2>Contact</h2>
 <p>Calming Audio LLC<br>${mail}</p>`);
 
-  legal("terms", `${APP} Terms of Use`, `Terms of use for the ${APP} app by Calming Audio, including how subscriptions, renewals, cancellations and refunds work.`, "2026-11-09", `
-<p>${APP} is provided by Calming Audio LLC. Your use of the app is governed by Apple’s Licensed Application End User License Agreement (the “Standard EULA”):</p>
+  legal("terms", `${APPS} Terms of Use`, `Terms of use for the ${APPS} apps by Calming Audio, including how subscriptions, renewals, cancellations and refunds work.`, "2026-11-12", `
+<p>${APPS} are provided by Calming Audio LLC. Your use of either app is governed by Apple’s Licensed Application End User License Agreement (the “Standard EULA”):</p>
 <p><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</a></p>
 
 <h2>Subscriptions</h2>
 <ul>
-  <li>${APP} offers Weekly, Monthly, Annual and Family subscriptions, and one-time Lifetime purchases.</li>
+  <li>${APP} offers Weekly, Monthly, Annual and Family subscriptions, and one-time Lifetime purchases. Each app shows its available plans and prices before you buy.</li>
   <li>Payment is charged to your Apple Account when you confirm the purchase.</li>
   <li>Subscriptions renew automatically unless you cancel at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours before the period ends.</li>
   <li>If a free trial is offered, any unused part of it ends when you buy a subscription.</li>
@@ -736,20 +739,20 @@ ${appLinks}
 </ul>
 
 <h2>Wellbeing</h2>
-<p>${APP} offers sounds and scenes to help you relax. It is not a medical device and doesn’t diagnose or treat any condition. If you have ongoing trouble sleeping, talk to a doctor.</p>
+<p>${APPS} offer sounds and scenes to help you relax. They are not medical devices and don’t diagnose or treat any condition. If you have ongoing trouble sleeping, talk to a doctor.</p>
 
 <h2>Contact</h2>
 <p>${mail}</p>`);
 
-  legal("support", `${APP} Support`, `Get help with the ${APP} app: restore purchases, cancel a subscription, delete your account, fix alarms, or email Calming Audio support.`, "", `
-<p class="lede">Need help with ${APP}? Email us at ${mail} and we’ll get back to you.</p>
+  legal("support", `${APPS} Support`, `Get help with the ${APPS} apps: restore purchases, cancel a subscription, delete your account, fix alarms, or email Calming Audio support.`, "", `
+<p class="lede">Need help with ${LEGAL_APPS.join(" or ")}? Email us at ${mail} and we’ll get back to you.</p>
 
 <h2>Common questions</h2>
 <ul>
   <li><strong>Restore purchases:</strong> open the app, go to Settings → Purchases → Restore purchases.</li>
   <li><strong>Cancel a subscription:</strong> go to Settings → Purchases → Manage subscription, or to your Apple Account’s Subscriptions in the iPhone Settings app.</li>
   <li><strong>Delete your account:</strong> open the app, go to Settings → Account → Delete account.</li>
-  <li><strong>The alarm didn’t sound:</strong> check that ${APP} is allowed to use Alarms in iPhone Settings, and that your phone’s volume is up.</li>
+  <li><strong>The alarm didn’t sound:</strong> check that the app is allowed to use Alarms in iPhone Settings, and that your phone’s volume is up.</li>
 </ul>`);
 }
 
@@ -850,7 +853,7 @@ const llms = `${llmsIntro}
 - [All videos](${abs("/videos/")}): the full library, searchable and sortable
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
-- [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
+- [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")}), shared with the Moonhum app
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories

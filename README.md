@@ -89,6 +89,6 @@ Edit `categories.json`. Each category has a `match` pattern that is checked agai
 - `hiddenVideoIds`: YouTube ids to leave off the site.
 - `app.appStoreUrl`: paste the Sleep Globes App Store link here when the app goes live. Every "Coming soon to iPhone" button turns into "Download on the App Store".
 
-The Sleep Globes privacy, terms and support pages (`/privacy/`, `/terms/`, `/support/`) are written in `scripts/build.mjs`. The app links to those exact addresses, so keep the paths.
+The privacy, terms and support pages (`/privacy/`, `/terms/`, `/support/`) are shared by Sleep Globes and Moonhum and are written in `scripts/build.mjs`. Both apps link to those exact addresses, so keep the paths. To add or rename an app on them, set `legalApps` in `site.config.json`, for example `["Sleep Globes", "Moonhum"]`.
 
 Video page URLs are saved in `data/videos.json`, so a page keeps its address even if you later rename the video on YouTube.
