@@ -119,8 +119,21 @@ const appShots = {
   castle: { alt: `${APP} screen showing the Medieval Castle world: a bed by a fireplace and a rainy gothic window` },
   cabin: { alt: `${APP} screen showing the Cabin in the Woods world: a wood stove, an oil lamp and rain on the window` },
 };
-const appShot = (name, { eager = false, sizes = "(max-width: 760px) 70vw, 300px" } = {}) =>
-  `<img class="app-shot" src="/assets/app/shot-${name}.webp" srcset="/assets/app/shot-${name}-460.webp 460w, /assets/app/shot-${name}.webp 920w" sizes="${sizes}" width="920" height="2000" alt="${esc(appShots[name].alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+const appShot = (name, { eager = false, sizes = "(max-width: 760px) 70vw, 300px", dir = "app", shots = appShots } = {}) =>
+  `<img class="app-shot" src="/assets/${dir}/shot-${name}.webp" srcset="/assets/${dir}/shot-${name}-460.webp 460w, /assets/${dir}/shot-${name}.webp 920w" sizes="${sizes}" width="920" height="2000" alt="${esc(shots[name].alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+
+// Moonhum: Calming Audio's free sleep-sounds app. Until config.moonhum.appStoreUrl is set, it's shown as "coming soon".
+const MH = "Moonhum";
+const MH_PATH = "/moonhum/";
+const MH_URL = config.moonhum?.appStoreUrl || "";
+const mhCta = () => MH_URL
+  ? `<a class="btn btn-primary" href="${esc(MH_URL)}" target="_blank" rel="noopener">${appleIcon}<span>Get it free on the App Store</span></a>`
+  : `<span class="btn btn-soon" aria-label="Coming soon to the App Store, free">${appleIcon}<span>Free · coming soon to iPhone</span></span>`;
+const mhShots = {
+  mixer: { alt: `${MH} home screen, “Drift off”: sound cards for Tin Roof Rain at 30%, Rain & Thunder at 75%, Light Rain and Ocean Waves, a Mixes row with Save mix and Rainy Night, and Timer, Play and Settings buttons` },
+  timer: { alt: `${MH} sleep timer: 15, 30 and 45 minutes, 1 hour, 1 hour 30 or custom, and a fade out of 30 seconds to 10 minutes` },
+};
+const mhShot = (name, opts = {}) => appShot(name, { ...opts, dir: "moonhum", shots: mhShots });
 
 function header(active) {
   const link = (href, label, key) => `<a href="${href}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`;
@@ -161,7 +174,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal">${esc(APP)} app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal">Moonhum app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal"><a href="${APP_PATH}">${esc(APP)}</a> app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal"><a href="/moonhum/">Moonhum</a> app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span></div>
 </footer>`;
 }
 
@@ -378,6 +391,15 @@ const page = (pathname, html) => pages.push([pathname, html]);
         <div class="row">${appCta()}<a class="btn btn-ghost" href="${APP_PATH}"><span>Take a look inside</span>${icons.arrow}</a></div>
       </div>
       <div class="app-shot-wrap">${appShot("cabin")}</div>
+    </div>
+    <div class="app-promo app-promo-alt" data-reveal data-glow>
+      <div>
+        <p class="eyebrow">Free${MH_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
+        <h2>Or keep it simple with <em>${MH}</em>.</h2>
+        <p class="muted">Our free sleep-sounds app. Drag rain, thunder and ocean waves up or down to mix them, save your favorite mixes, and let a sleep timer fade them out. No ads, no account, and it never collects your data.</p>
+        <div class="row">${mhCta()}<a class="btn btn-ghost" href="${MH_PATH}"><span>See ${MH}</span>${icons.arrow}</a></div>
+      </div>
+      <div class="app-shot-wrap">${mhShot("mixer")}</div>
     </div>
   </div>
 </section>
@@ -627,6 +649,67 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
       <li><a href="/support/">Support &amp; FAQs ${icons.arrow}</a></li>
       <li><a href="/privacy/">Privacy Policy ${icons.arrow}</a></li>
       <li><a href="/terms/">Terms of Use ${icons.arrow}</a></li>
+    </ul>
+  </div>
+</div></section>`,
+  }));
+}
+
+// Moonhum landing page
+{
+  const p = MH_PATH;
+  const title = `${MH}: free sleep sounds for iPhone`;
+  const description = `${MH} is a free sleep-sounds app from Calming Audio: mix rain, thunder and ocean waves, save mixes, and fade out on a sleep timer. No ads, no account, no data collected.`;
+  const features = [
+    ["🎚️", "Mix by dragging", "Drag any sound card up or down to set its volume, and hold one to pin it to the front. Every sound is built into the app, so it works offline."],
+    ["💜", "Save your mixes", "Found the perfect blend of rain and thunder? Tap Save mix, and it’s one tap away every night after."],
+    ["🌘", "A timer that fades out", "Pick 15 minutes to an hour and a half, or set your own, then choose how slowly it fades: from 30 seconds to 10 minutes."],
+    ["⏰", "A gentle wake-up alarm", "Set a wake-up time and tone. On iOS 26 and later, the alarm is scheduled by iOS right on your phone."],
+    ["📱", "Widgets, Control Center and Siri", "Start sleeping from your Lock Screen, Control Center, or by saying “Start sleeping with Moonhum”."],
+    ["🔒", "Free, and nothing collected", "No ads, no in-app purchases, no account and no analytics. The app never sends anything off your phone."],
+  ];
+  page(p, layout({
+    title, active: "app", pathname: p, description,
+    ogImage: abs("/assets/moonhum/og-moonhum.jpg"), ogImageWidth: 1200, ogImageHeight: 630,
+    ogImageAlt: `Two ${MH} screens: the sound mixer with rain and thunder, and the sleep timer`,
+    ld: [
+      { "@context": "https://schema.org", "@type": "MobileApplication", name: MH, operatingSystem: "iOS", applicationCategory: "HealthApplication",
+        description, url: abs(p), publisher: publisherRef, author: publisherRef,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        screenshot: Object.keys(mhShots).map((n) => abs(`/assets/moonhum/shot-${n}.webp`)), image: abs("/assets/moonhum/og-moonhum.jpg"),
+        ...(MH_URL ? { downloadUrl: MH_URL, installUrl: MH_URL } : {}) },
+      webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: MH } }),
+      breadcrumbLd([["Home", "/"], [MH, p]]),
+    ],
+    body: `<section class="page-head app-hero"><div class="wrap">
+  <div class="app-hero-copy">
+    <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${MH}</span></nav>
+    <p class="eyebrow" data-reveal>Free${MH_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
+    <h1 data-reveal>${MH}</h1>
+    <p class="lede" data-reveal>Drift off to rain on a tin roof, a distant thunderstorm or ocean waves. Mix the sounds you love, set a timer that fades them out, and sleep. Free, with no ads and no account.</p>
+    <div class="row" data-reveal>${mhCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Follow on YouTube for launch news</span></a></div>
+  </div>
+  <div class="app-shot-wrap" data-reveal>${mhShot("mixer", { eager: true })}</div>
+</div></section>
+<section class="section section-tight"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">Inside the app</p><h2>A look around</h2></div>
+  <div class="app-gallery" tabindex="0" aria-label="${MH} screenshots">${Object.keys(mhShots).map((n, i) => `<figure data-reveal style="--i:${i}">${mhShot(n, { sizes: "(max-width: 760px) 72vw, 280px" })}</figure>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">What’s inside</p><h2>Simple sounds for sleep</h2></div>
+  <div class="app-features">${features.map(([icon, h, t], i) => `<div class="app-feature" data-reveal data-glow style="--i:${i}"><span class="cat-icon" aria-hidden="true">${icon}</span><h3>${h}</h3><p class="muted">${t}</p></div>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="partner" data-reveal data-glow>
+    <div>
+      <p class="eyebrow">Price</p>
+      <h2>Free. Really.</h2>
+      <p class="muted">${MH} costs nothing, with no ads, no subscriptions and no in-app purchases. Want more? <a href="${APP_PATH}">${esc(APP)}</a>, our other sleep app, puts you in a different room every night.</p>
+      <div class="row">${mhCta()}</div>
+    </div>
+    <ul class="app-help">
+      <li><a href="/moonhum/support/">Support &amp; FAQs ${icons.arrow}</a></li>
+      <li><a href="/moonhum/privacy/">Privacy Policy ${icons.arrow}</a></li>
     </ul>
   </div>
 </div></section>`,
@@ -907,7 +990,7 @@ const llms = `${llmsIntro}
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
 - [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
-- Moonhum app: a free Calming Audio sleep-sounds app for iPhone that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
+- [Moonhum app](${abs(MH_PATH)}): a free Calming Audio sleep-sounds app for iPhone (${MH_URL ? "available now" : "coming soon"}) that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories
