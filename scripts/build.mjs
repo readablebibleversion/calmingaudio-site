@@ -643,7 +643,7 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     <p class="eyebrow" data-reveal>${APP_URL ? "Now on iPhone" : "Coming soon to iPhone"}</p>
     <h1 data-reveal>${esc(APP)}</h1>
     <p class="lede" data-reveal>Where are you sleeping tonight? The sleep app from Calming Audio puts you in a different room every night, with the sounds to match. Set your timer and let the night take care of itself.</p>
-    <div class="row" data-reveal>${appCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Follow on YouTube for launch news</span></a></div>
+    <div class="row" data-reveal>${appCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>${APP_URL ? "Sleep sounds on YouTube" : "Follow on YouTube for launch news"}</span></a></div>
   </div>
   <div class="app-shot-wrap" data-reveal>${appShot("palace", { eager: true })}</div>
 </div></section>
@@ -711,7 +711,7 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
     <p class="eyebrow" data-reveal>Free${MH_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
     <h1 data-reveal>${MH}</h1>
     <p class="lede" data-reveal>Drift off to rain on a tin roof, a distant thunderstorm or ocean waves. Mix the sounds you love, set a timer that fades them out, and sleep. Free, with no ads and no account.</p>
-    <div class="row" data-reveal>${mhCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>Follow on YouTube for launch news</span></a></div>
+    <div class="row" data-reveal>${mhCta()}<a class="btn btn-ghost" href="${YT_SUB}" target="_blank" rel="noopener">${icons.yt}<span>${MH_URL ? "Sleep sounds on YouTube" : "Follow on YouTube for launch news"}</span></a></div>
   </div>
   <div class="app-shot-wrap" data-reveal>${mhShot("mixer", { eager: true })}</div>
 </div></section>
@@ -1016,7 +1016,7 @@ const llms = `${llmsIntro}
 - [Categories](${abs("/categories/")}): every mood and sound type
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
 - [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
-- [Moonhum app](${abs(MH_PATH)}): a free Calming Audio sleep-sounds app for iPhone (${MH_URL ? "available now" : "coming soon"}) that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
+- [Moonhum app](${abs(MH_PATH)}): a free Calming Audio sleep-sounds app for iPhone (${MH_URL ? `[free on the App Store](${MH_URL})` : "coming soon"}) that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories
