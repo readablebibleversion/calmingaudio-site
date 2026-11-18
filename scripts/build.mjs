@@ -30,12 +30,13 @@ const JS_FLAG = 'document.documentElement.classList.add("js")'; // the only inli
 const sha256 = (s) => `'sha256-${createHash("sha256").update(s).digest("base64")}'`;
 const securityMeta = (inlineScripts = []) => `<meta http-equiv="Content-Security-Policy" content="${[
   "default-src 'self'",
-  `script-src 'self' ${inlineScripts.map(sha256).join(" ")}`.trim(),
+  // static.cloudflareinsights.com: Cloudflare Web Analytics, which Cloudflare adds to every page itself.
+  `script-src 'self' https://static.cloudflareinsights.com ${inlineScripts.map(sha256).join(" ")}`.trim(),
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https://i.ytimg.com",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
-  "connect-src 'self' https://script.google.com https://script.googleusercontent.com",
+  "connect-src 'self' https://script.google.com https://script.googleusercontent.com https://cloudflareinsights.com",
   "form-action 'self' https://script.google.com",
   "base-uri 'self'",
   "object-src 'none'",
