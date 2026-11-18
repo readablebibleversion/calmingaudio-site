@@ -99,6 +99,14 @@
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
   }));
 
+  // ---------- image fallback: swap to data-fallback if the first image is missing ----------
+  // (Kept here instead of an inline onerror="" so the Content Security Policy can block all inline script.)
+  $$("img[data-fallback]").forEach((img) => {
+    const swap = () => { if (img.dataset.fallback && img.src !== img.dataset.fallback) img.src = img.dataset.fallback; };
+    if (img.complete && img.naturalWidth === 0) swap(); // it already failed before this script ran
+    else img.addEventListener("error", swap, { once: true });
+  });
+
   // ---------- lightweight YouTube facade (home feature): poster -> playing ----------
   $$(".lite-yt").forEach((box) => {
     const player = machine(box, "poster", { poster: { play: "playing" } }, (s) => {

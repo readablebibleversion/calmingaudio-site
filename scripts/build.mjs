@@ -3,6 +3,7 @@
 
 import { readFile, writeFile, mkdir, rm, cp } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -20,6 +21,27 @@ const YT_SUB = `${YT_CHANNEL}?sub_confirmation=1`;
 // ---------- helpers ----------
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const abs = (p) => SITE + p;
+
+// Security policy for every page. GitHub Pages can't send custom headers, so the Content Security Policy goes in a
+// <meta> tag. It only lets the browser run this site's own script (plus the exact inline snippets passed in, by hash),
+// load YouTube players and thumbnails and Google Fonts, and send the contact form to its Google Apps Script endpoint.
+// If you embed something new (another video host, analytics), add its domain here or the browser will block it.
+const JS_FLAG = 'document.documentElement.classList.add("js")'; // the only inline script on normal pages
+const sha256 = (s) => `'sha256-${createHash("sha256").update(s).digest("base64")}'`;
+const securityMeta = (inlineScripts = []) => `<meta http-equiv="Content-Security-Policy" content="${[
+  "default-src 'self'",
+  `script-src 'self' ${inlineScripts.map(sha256).join(" ")}`.trim(),
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: https://i.ytimg.com",
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+  "connect-src 'self' https://script.google.com https://script.googleusercontent.com",
+  "form-action 'self' https://script.google.com",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
+].join("; ")}">
+<meta name="referrer" content="strict-origin-when-cross-origin">`;
 const ytWatch = (id) => `https://www.youtube.com/watch?v=${id}`;
 const ytEmbed = (id) => `https://www.youtube.com/embed/${id}`;
 const thumb = (id, q = "hqdefault") => `https://i.ytimg.com/vi/${id}/${q}.jpg`;
@@ -188,6 +210,7 @@ function layout({ title, description, pathname, body, active, head = "", ld = []
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${securityMeta([JS_FLAG])}
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
 ${noindex ? '<meta name="robots" content="noindex, follow">' : `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -221,7 +244,7 @@ ${img ? `<meta name="twitter:image" content="${esc(img)}">
 <link rel="stylesheet" href="/assets/styles.css?v=${BUILD}">
 ${head}
 ${ld.map(jsonLd).join("\n")}
-<script>document.documentElement.classList.add("js")</script>
+<script>${JS_FLAG}</script>
 <script src="/assets/app.js?v=${BUILD}" defer></script>
 </head>
 <body class="${bodyClass}">
@@ -346,7 +369,7 @@ const page = (pathname, html) => pages.push([pathname, html]);
     <div class="section-head" data-reveal><p class="eyebrow">Newest soundscape</p><h2>Latest upload</h2></div>
     <article class="feature" data-reveal>
       <div class="feature-media lite-yt" data-yt="${featured.id}" data-title="${esc(featured.title)}">
-        <img src="${thumb(featured.id, "maxresdefault")}" onerror="this.onerror=null;this.src='${thumb(featured.id, "hqdefault")}'" alt="${esc(featured.title)}" width="1280" height="720" fetchpriority="high">
+        <img src="${thumb(featured.id, "maxresdefault")}" data-fallback="${thumb(featured.id, "hqdefault")}" alt="${esc(featured.title)}" width="1280" height="720" fetchpriority="high">
         <button class="lite-play" type="button" aria-label="Play ${esc(featured.title)}">${icons.play}</button>
       </div>
       <div class="feature-copy">
@@ -560,9 +583,9 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   <form class="contact-form" data-contact data-reveal data-glow data-endpoint="${esc(endpoint)}" method="POST" novalidate>
     <input type="hidden" name="started" value="">
     <input type="checkbox" name="botcheck" value="1" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div class="field"><input id="f-name" name="name" required autocomplete="name" placeholder=" "><label for="f-name">Your name</label></div>
-    <div class="field"><input id="f-email" name="email" type="email" required autocomplete="email" placeholder=" "><label for="f-email">Email</label></div>
-    <div class="field"><input id="f-company" name="company" autocomplete="organization" placeholder=" "><label for="f-company">Company or brand (optional)</label></div>
+    <div class="field"><input id="f-name" name="name" maxlength="100" required autocomplete="name" placeholder=" "><label for="f-name">Your name</label></div>
+    <div class="field"><input id="f-email" name="email" type="email" maxlength="254" required autocomplete="email" placeholder=" "><label for="f-email">Email</label></div>
+    <div class="field"><input id="f-company" name="company" maxlength="120" autocomplete="organization" placeholder=" "><label for="f-company">Company or brand (optional)</label></div>
     <div class="field field-select"><select id="f-type" name="inquiry_type" required data-type>
       <option value="sponsorship">Sponsorship</option>
       <option value="partnership">Brand partnership</option>
@@ -575,7 +598,7 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
       <option value="">Prefer not to say</option>
       <option>Under $500</option><option>$500 – $2,000</option><option>$2,000 – $5,000</option><option>$5,000+</option>
     </select><label for="f-budget">Budget (optional)</label></div>
-    <div class="field"><textarea id="f-msg" name="message" rows="5" required placeholder=" "></textarea><label for="f-msg">Tell us a little about it</label></div>
+    <div class="field"><textarea id="f-msg" name="message" rows="5" maxlength="5000" required placeholder=" "></textarea><label for="f-msg">Tell us a little about it</label></div>
     <button class="btn btn-primary btn-block" type="submit" data-submit><span>Send message</span>${icons.arrow}</button>
     <p class="form-status" data-status role="status" aria-live="polite"></p>
     <div class="form-done" data-done hidden><span class="done-ring"></span><h2>Message sent</h2><p class="muted">Thanks for reaching out. We usually reply within a few days.</p></div>
@@ -915,16 +938,18 @@ await writeFile(path.join(out, "404.html"), notFound);
 const redirects = Object.fromEntries((config.app?.oldPaths || []).map((p) => [p, APP_PATH]));
 for (const [from, to] of Object.entries(redirects)) {
   const target = abs(to);
+  const forward = `location.replace(${JSON.stringify(to)} + location.search + location.hash)`;
   await mkdir(path.join(out, from), { recursive: true });
   await writeFile(path.join(out, from, "index.html"), `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+${securityMeta([forward])}
 <title>Moved to ${esc(target)}</title>
 <meta name="robots" content="noindex, follow">
 <link rel="canonical" href="${target}">
 <meta http-equiv="refresh" content="0; url=${target}">
-<script>location.replace(${JSON.stringify(to)} + location.search + location.hash)</script>
+<script>${forward}</script>
 </head>
 <body style="background:#060912;color:#e9eef8;font-family:system-ui,sans-serif;padding:40px">
 <p>This page has moved to <a href="${target}" style="color:#9fdcef">${esc(target)}</a>.</p>

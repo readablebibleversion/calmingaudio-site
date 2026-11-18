@@ -63,7 +63,24 @@ The form sends each message to a small script that runs in your own Google accou
 
 Until the URL is set, the form shows a friendly "not connected yet" message instead of sending. If you later edit the script, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 
-Spam protection is built in: a hidden field that bots fill in, and a check that rejects forms submitted faster than a person could type.
+Spam and abuse protection is built into the script, which checks every request itself because anyone can call its URL directly:
+
+- a hidden field that bots fill in, and a check that rejects forms sent faster than a person could type (or with no start time)
+- rate limits: 3 messages per sender address per hour, 20 per hour in total, 60 per day, so nobody can flood your inbox or use up Google's daily email allowance
+- fields are cut to fixed lengths, line breaks are stripped from the name, email and company (so nobody can add email headers), and the topic and budget must be one of the form's own choices
+- messages are emailed as plain text, so nothing in them can run in your inbox
+
+Blocked and failed requests are logged under **Executions** in the Apps Script editor.
+
+## Security
+
+The site is static: no database, no logins, no passwords and no server code on calmingaudio.com, which removes most ways in. On top of that:
+
+- **Content Security Policy** in every page (`securityMeta()` in `scripts/build.mjs`). Browsers only run this site's own script, only load YouTube, Google Fonts and the contact-form endpoint, and refuse anything injected. If you add a new embed or service, add its domain there or it will be blocked. Don't add inline `onclick=""`-style handlers; put the code in `src/assets/app.js`.
+- **No secrets in the code.** `YOUTUBE_API_KEY` (optional) and `CONTACT_FORM_ENDPOINT` are GitHub repository secrets. The contact-form URL ends up in the public page by design; the rate limits above are what protect it. GitHub secret scanning and push protection are on, so a key pushed by mistake is blocked.
+- **Locked-down deploys.** The workflow has no permissions by default, each job gets only what it needs, and every action is pinned to an exact commit.
+- **HTTPS** is enforced by GitHub Pages and Cloudflare. HTTP security headers that a `<meta>` tag can't set (HSTS, framing protection) go in Cloudflare: see the security report.
+- `npm run dev` only listens on this computer and never serves files outside `dist/`.
 
 ## Interactive states
 
