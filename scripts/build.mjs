@@ -444,6 +444,17 @@ const page = (pathname, html) => pages.push([pathname, html]);
       </dl>
     </div>
   </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="download-band" data-reveal data-glow>
+      <p class="eyebrow">Free${MH_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
+      <h2>Take Calming Audio to bed with <em>${MH}</em>.</h2>
+      <p class="muted">Mix rain, thunder and ocean waves, set a sleep timer, and drift off. Free, with no ads and no account.</p>
+      <div class="row center">${mhCta()}<a class="btn btn-ghost" href="${MH_PATH}"><span>See ${MH}</span>${icons.arrow}</a></div>
+    </div>
+  </div>
 </section>`;
   page("/", layout({
     title: config.siteName, description: config.description, pathname: "/", body, bodyClass: "home",
