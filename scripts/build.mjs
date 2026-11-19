@@ -217,7 +217,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal"><a href="${APP_PATH}">${esc(APP)}</a> app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal"><a href="/moonhum/">Moonhum</a> app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span><span class="footer-legal"><a href="${SC_PATH}">${SC}</a> app: <a href="${SC_SITE}/privacy">Privacy</a> · <a href="${SC_SITE}/terms">Terms</a> · <a href="${SC_SITE}/support">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal"><a href="${APP_PATH}">${esc(APP)}</a> app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal"><a href="/moonhum/">Moonhum</a> app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span><span class="footer-legal">Beam app: <a href="/beam/privacy/">Privacy</a> · <a href="/beam/support/">Support</a></span><span class="footer-legal"><a href="${SC_PATH}">${SC}</a> app: <a href="${SC_SITE}/privacy">Privacy</a> · <a href="${SC_SITE}/terms">Terms</a> · <a href="${SC_SITE}/support">Support</a></span></div>
 </footer>`;
 }
 
@@ -853,11 +853,11 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
   // effective: ISO date shown as "Effective" at the top; update it whenever the policy changes.
   const fmtLongDate = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   // app/links: which app the page belongs to and the related-page links at the bottom (Sleep Globes by default).
-  const legal = (slug, title, description, effective, content, { app = APP, links = appLinks } = {}) => {
+  const legal = (slug, title, description, effective, content, { app = APP, links = appLinks, category = "HealthApplication" } = {}) => {
     const p = `/${slug}/`;
     page(p, layout({
       title, pathname: p, description,
-      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: app, operatingSystem: "iOS", applicationCategory: "HealthApplication", publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
+      ld: [webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: app, operatingSystem: "iOS", applicationCategory: category, publisher: publisherRef }, ...(effective && { datePublished: effective, dateModified: effective }) }), breadcrumbLd([["Home", "/"], [title, p]])],
       body: `<section class="page-head"><div class="wrap">
   <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${esc(title)}</span></nav>
   <p class="eyebrow" data-reveal>${esc(app)} app</p>
@@ -1019,6 +1019,99 @@ ${links}
   <li><strong>Start sleeping from the Lock Screen:</strong> add the ${MH} widget to your Lock Screen or Home Screen, add the “Start sleeping” control to Control Center, or say “Start sleeping with ${MH}” to Siri.</li>
   <li><strong>Does it cost anything?</strong> No. ${MH} is free, with no ads and no in-app purchases.</li>
 </ul>`, { app: MH, links: mhLinks });
+
+  // Beam: Calming Audio's smart TV remote (paid Pro features). App Store Connect links to /beam/privacy/ and
+  // /beam/support/. Its App Privacy answer is "Purchases → Purchase History" (RevenueCat), not linked to the
+  // user and not used for tracking. Keep this policy in step with the app. No terms page: the app links
+  // Apple's standard EULA.
+  const BM = "Beam";
+  const bmLinks = `<p class="legal-links"><a href="/beam/privacy/">Privacy Policy</a> · <a href="/beam/support/">Support</a> · <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">Terms of Use</a></p>`;
+  const bmOpts = { app: BM, links: bmLinks, category: "UtilitiesApplication" };
+  legal("beam/privacy", `${BM} Privacy Policy`, `${BM} by Calming Audio controls your TV over your home Wi-Fi. No account, no ads, no tracking. Your TVs, settings and home location stay on your phone.`, "2026-11-19", `
+<p>${BM} is a TV remote app by Calming Audio LLC (“we”, “us”). This policy explains what information the app uses, why, and the choices you have.</p>
+
+<h2>The short version</h2>
+<ul>
+  <li>There’s no account and no sign-up. We don’t show ads, we don’t use analytics, and we don’t track you across other apps or websites.</li>
+  <li>${BM} talks directly to your TVs over your home Wi-Fi. Your TVs, scenes, settings and home location stay on your phone.</li>
+  <li>Purchases are handled by Apple. To unlock Beam Pro we use RevenueCat, which receives your purchase history and a random app ID, not your name or email.</li>
+</ul>
+
+<h2>Information that stays on your phone</h2>
+<p>So the app works the way you set it up, these are saved on your device only:</p>
+<ul>
+  <li>your saved TVs: their names, brands, addresses on your home network, and the pairing codes some TVs hand out</li>
+  <li>your scenes, schedules, input names, theme and other settings</li>
+  <li>your recent Watch it searches</li>
+  <li>your home spot, if you turn on Leave home (see below)</li>
+</ul>
+<p>We can’t see any of this. It’s removed when you delete the app. If you back up your iPhone, it may be included in your iCloud or computer backup, which Apple manages.</p>
+
+<h2>Your TVs and your home network</h2>
+<p>${BM} finds TVs on your Wi-Fi and sends them commands (keys, volume, apps, searches, messages, and photos you choose to cast) directly. Nothing passes through our servers. iOS asks for Local Network permission the first time.</p>
+
+<h2>Microphone and speech</h2>
+<ul>
+  <li><strong>Voice search:</strong> when you tap the mic, iOS turns what you say into text using Apple’s speech recognition, and ${BM} sends that text to your TV. Apple may process the audio under Apple’s privacy policy. We never receive or keep recordings.</li>
+  <li><strong>Loudness guard:</strong> when you turn it on, ${BM} measures how loud the room is to turn the TV down. It only reads the sound level. Nothing is recorded or saved.</li>
+</ul>
+
+<h2>Location (Leave home)</h2>
+<p>Leave home is optional and off until you turn it on. If you do, ${BM} saves your home spot on your phone and asks iOS to tell it when you leave that area, so it can turn your TVs off. This needs “Always” location access. Your location is never sent to us or anyone else. You can turn Leave home off in the app, or change ${BM}’s location access in the iPhone Settings app at any time.</p>
+
+<h2>Photos and videos</h2>
+<p>If you cast a photo or video, you pick it, and ${BM} streams it from your phone to your TV over your Wi-Fi. It isn’t uploaded anywhere.</p>
+
+<h2>Sharing with family</h2>
+<p>If you share your TVs with family, the other phone scans a QR code and copies your saved TVs and scenes straight from your phone over your Wi-Fi, only while the share screen is open. Nothing goes through a server.</p>
+
+<h2>Notifications</h2>
+<p>TV-left-on alerts and Leave home messages are created on your phone. We don’t send or receive them.</p>
+
+<h2>Siri, widgets, Control Center, Lock Screen and Apple Watch</h2>
+<p>These work on your devices and share your saved TVs and scenes between the app, its widgets and your Apple Watch.</p>
+
+<h2>Purchases</h2>
+<p>Subscriptions and purchases are processed by Apple. We never receive your payment details. To know what you’ve bought and unlock Beam Pro (including for Family Sharing members), we use RevenueCat, which receives your purchase history and a random app user ID.</p>
+
+<h2>Services we use</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Service</th><th scope="col">What it does for us</th><th scope="col">What it receives</th></tr></thead>
+  <tbody>
+    <tr><td>Apple (App Store)</td><td>Payments and subscriptions</td><td>Your purchases, under Apple’s privacy policy</td></tr>
+    <tr><td>Apple (speech recognition)</td><td>Turning voice search into text</td><td>What you say when you use voice search, under Apple’s privacy policy</td></tr>
+    <tr><td>RevenueCat</td><td>Knowing what you’ve bought</td><td>Purchase history and a random app user ID</td></tr>
+  </tbody>
+</table></div>
+<p>We don’t sell or share your information with anyone else, and we don’t use it for advertising.</p>
+
+<h2>Deleting your information</h2>
+<p>Deleting the app removes everything it saved on your phone. To ask us to delete purchase records held by RevenueCat, or for any other privacy request, contact us at the address below.</p>
+
+<h2>Children</h2>
+<p>${BM} is not directed to children under 13, and we don’t knowingly collect personal information from them.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy, we’ll update the date at the top. If the app ever starts collecting more information, we’ll say so here before it does.</p>
+
+<h2>Contact</h2>
+<p>Calming Audio LLC<br>${mail}</p>`, bmOpts);
+
+  legal("beam/support", `${BM} Support`, `Get help with ${BM}: connecting your TV, pairing, Beam Pro purchases, Leave home, Watch it and Family Sharing.`, "", `
+<p class="lede">Need help with ${BM}? Email us at ${mail} with your TV’s brand and model, and we’ll get back to you.</p>
+
+<h2>Common questions</h2>
+<ul>
+  <li><strong>Beam can’t find my TV:</strong> make sure your phone and TV are on the same Wi-Fi and the TV is on, and that ${BM} is allowed to use the Local Network in iPhone Settings → Privacy &amp; Security → Local Network. Some TVs need “control by mobile apps” (or similar) turned on in their network settings.</li>
+  <li><strong>The TV asks to allow a connection or shows a PIN:</strong> that’s normal the first time. Accept it on the TV or type the PIN into ${BM}.</li>
+  <li><strong>Turning the TV on doesn’t work:</strong> many TVs switch off their Wi-Fi when they’re off. Look for “Quick start”, “Wake on LAN” or “Network standby” in the TV’s settings and turn it on.</li>
+  <li><strong>Restore purchases:</strong> open ${BM} → Settings → Restore purchases, or tap Restore on the Beam Pro screen.</li>
+  <li><strong>Cancel a subscription:</strong> go to your Apple Account’s Subscriptions in the iPhone Settings app.</li>
+  <li><strong>Family Sharing:</strong> Beam Pro works for up to 6 people in your Apple Family Sharing group. Family members tap Restore purchases.</li>
+  <li><strong>Leave home didn’t turn my TVs off:</strong> ${BM} reaches TVs over your Wi-Fi. If iOS notices you left after your phone lost Wi-Fi, the TVs can’t be reached. Try the CarPlay or Bluetooth Shortcut on the Leave home screen; it runs while you’re still home.</li>
+  <li><strong>Watch it:</strong> on Roku, ${BM} searches every app at once. On other TVs, ${BM} opens the app; move to its search box with the remote and tap <strong>Type it</strong>.</li>
+</ul>`, bmOpts);
+
 }
 
 // 404
