@@ -158,6 +158,26 @@ const mhShots = {
 };
 const mhShot = (name, opts = {}) => appShot(name, { ...opts, dir: "moonhum", shots: mhShots });
 
+// SkyCalm: Calming Audio's fear-of-flying app. Its privacy, terms and support pages live on its own site, skycalm.net.
+const SC = "SkyCalm";
+const SC_PATH = "/skycalm/";
+const SC_URL = config.skycalm?.appStoreUrl || "";
+const SC_SITE = (config.skycalm?.site || "https://skycalm.net/").replace(/\/$/, "");
+const scCta = () => SC_URL
+  ? `<a class="btn btn-primary" href="${esc(SC_URL)}" target="_blank" rel="noopener">${appleIcon}<span>Get it free on the App Store</span></a>`
+  : `<span class="btn btn-soon" aria-label="Coming soon to the App Store">${appleIcon}<span>Coming soon to iPhone</span></span>`;
+// App Store screenshots in src/assets/skycalm/ (each has a 920px and a 460px version).
+const scShots = {
+  sos: { alt: `${SC} SOS screen, “Panic help that talks you through it”: a breathing circle saying Breathe in, breath 2 of 18, a Show the crew button, and I’m feeling better and Bumpy right now links` },
+  home: { alt: `${SC} home screen, “Meet Puff, your calm companion”: an Austin to London flight in 2 days, day 2 of the Fly calmer course, a note that turbulence is uncomfortable, not dangerous, and Puff’s night sky of 11 calm days` },
+  course: { alt: `${SC} course screen, “7 days to calmer flying”: day 1 of 7, Your fear makes sense, with Puff the cloud and a Let’s start button` },
+  "flight-plan": { alt: `${SC} flight screen, “Know what to expect on your route”: Austin to London in 2 hours, a turbulence outlook with light and moderate bumps, and a plan for days before, night before and at the airport` },
+  "in-flight": { alt: `${SC} in-flight screen, “Calm in the air, even offline”: cruising with 6 hours 30 minutes to go, SOS, Breathe and Cabin sound buttons, and explanations of bumps, the seatbelt sign and altitude changes` },
+  crew: { alt: `${SC} crew card, “Help, even when you can’t find the words”: a message for a flight attendant saying I’m a nervous flyer and having a panic attack, in 9 languages` },
+  turbulence: { alt: `${SC} turbulence screen, “Bumpy? Here’s why you’re safe”: what a plane is built for compared with what you feel, and short facts about why bumps are safe` },
+};
+const scShot = (name, opts = {}) => appShot(name, { ...opts, dir: "skycalm", shots: scShots });
+
 function header(active) {
   const link = (href, label, key) => `<a href="${href}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`;
   return `<header class="site-header" data-header>
@@ -197,7 +217,7 @@ function footer() {
       </ul>
     </div>
   </div>
-  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal"><a href="${APP_PATH}">${esc(APP)}</a> app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal"><a href="/moonhum/">Moonhum</a> app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span></div>
+  <div class="wrap footer-bottom muted"><span>© ${new Date().getFullYear()} Calming Audio LLC. All rights reserved.</span><span class="footer-legal"><a href="${APP_PATH}">${esc(APP)}</a> app: <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/support/">Support</a></span><span class="footer-legal"><a href="/moonhum/">Moonhum</a> app: <a href="/moonhum/privacy/">Privacy</a> · <a href="/moonhum/support/">Support</a></span><span class="footer-legal"><a href="${SC_PATH}">${SC}</a> app: <a href="${SC_SITE}/privacy">Privacy</a> · <a href="${SC_SITE}/terms">Terms</a> · <a href="${SC_SITE}/support">Support</a></span></div>
 </footer>`;
 }
 
@@ -424,6 +444,15 @@ const page = (pathname, html) => pages.push([pathname, html]);
         <div class="row">${mhCta()}<a class="btn btn-ghost" href="${MH_PATH}"><span>See ${MH}</span>${icons.arrow}</a></div>
       </div>
       <div class="app-shot-wrap">${mhShot("mixer")}</div>
+    </div>
+    <div class="app-promo" data-reveal data-glow>
+      <div>
+        <p class="eyebrow">Free${SC_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
+        <h2>Nervous about flying? Try <em>${SC}</em>.</h2>
+        <p class="muted">Panic help that talks you through it, a 7-day course for calmer flying, a turbulence outlook for your route, and calm sounds that work in flight mode.</p>
+        <div class="row">${scCta()}<a class="btn btn-ghost" href="${SC_PATH}"><span>See ${SC}</span>${icons.arrow}</a></div>
+      </div>
+      <div class="app-shot-wrap">${scShot("sos")}</div>
     </div>
   </div>
 </section>
@@ -684,6 +713,71 @@ ${related.length ? `<section class="section"><div class="wrap"><div class="secti
       <li><a href="/support/">Support &amp; FAQs ${icons.arrow}</a></li>
       <li><a href="/privacy/">Privacy Policy ${icons.arrow}</a></li>
       <li><a href="/terms/">Terms of Use ${icons.arrow}</a></li>
+    </ul>
+  </div>
+</div></section>`,
+  }));
+}
+
+// SkyCalm landing page
+{
+  const p = SC_PATH;
+  const title = `${SC}: fear of flying help for iPhone`;
+  const description = `${SC} is a free fear-of-flying app from Calming Audio: hands-free panic help, a 7-day course for calmer flying, a turbulence outlook for your route, and calm sounds that work offline.`;
+  const features = [
+    ["🆘", "SOS that works when you can’t think", "Open SOS and it starts by itself. A calm voice talks you through it, your phone taps gently to guide your breathing, and there’s a card to show the crew if you can’t find the words."],
+    ["📅", "Fly calmer: a 7-day course", "Short daily steps based on proven techniques: how anxiety works, calm breathing, how flying really works, rethinking “what if” thoughts, and a plan for flight day."],
+    ["🗺️", "Your flight, planned", "Add your flight, or let SkyCalm find it in your calendar. It checks in at the right moments, downloads your sounds for flight mode, and shows a turbulence outlook for your route."],
+    ["✈️", "Calm in the air, even offline", "In-flight mode, a Live Activity on your Lock Screen, “Bumpy right now?” help and “What’s that noise?” explanations. It all works offline."],
+    ["💌", "Your people", "Ask loved ones for a note to read on the plane, tell your travel companion how to help, and let someone know when you land."],
+    ["🎧", "Sounds and meditations", "Cabin sounds, calming music and guided meditations for every stage of your trip."],
+    ["⌚", "Apple Watch, widgets and Siri", "Breathe with gentle taps on your wrist, plus SOS widgets, Control Center buttons and “Hey Siri, SkyCalm SOS.”"],
+    ["❤️", "Apple Health, if you want it", "Save breathing and course time as Mindful Minutes. Your health data never leaves your phone."],
+  ];
+  page(p, layout({
+    title, active: "app", pathname: p, description,
+    ogImage: abs("/assets/skycalm/og-skycalm.jpg"), ogImageWidth: 1200, ogImageHeight: 630,
+    ogImageAlt: `Three ${SC} screens: hands-free panic help, a flight plan with a turbulence outlook, and in-flight mode`,
+    ld: [
+      { "@context": "https://schema.org", "@type": "MobileApplication", name: SC, alternateName: "SkyCalm: Fear of Flying", operatingSystem: "iOS", applicationCategory: "HealthApplication",
+        description, url: abs(p), sameAs: [`${SC_SITE}/`], publisher: publisherRef, author: publisherRef,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        screenshot: Object.keys(scShots).map((n) => abs(`/assets/skycalm/shot-${n}.webp`)), image: abs("/assets/skycalm/og-skycalm.jpg"),
+        ...(SC_URL ? { downloadUrl: SC_URL, installUrl: SC_URL } : {}) },
+      webPage("WebPage", title, description, p, { about: { "@type": "MobileApplication", name: SC } }),
+      breadcrumbLd([["Home", "/"], [SC, p]]),
+    ],
+    body: `<section class="page-head app-hero"><div class="wrap">
+  <div class="app-hero-copy">
+    <nav class="crumbs" aria-label="Breadcrumb" data-reveal><a href="/">Home</a><span>/</span><span aria-current="page">${SC}</span></nav>
+    <p class="eyebrow" data-reveal>Fear of flying · Free${SC_URL ? " on iPhone" : " · coming soon to iPhone"}</p>
+    <h1 data-reveal>${SC}</h1>
+    <p class="lede" data-reveal>Feel calmer about flying, from the day you book to the moment you land. Hands-free panic help, a 7-day course, a turbulence outlook for your route, and calm that works in flight mode.</p>
+    <div class="row" data-reveal>${scCta()}<a class="btn btn-ghost" href="${SC_SITE}/guides/" target="_blank" rel="noopener"><span>Read the flying guides</span>${icons.arrow}</a></div>
+  </div>
+  <div class="app-shot-wrap" data-reveal>${scShot("sos", { eager: true })}</div>
+</div></section>
+<section class="section section-tight"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">Inside the app</p><h2>A look around</h2></div>
+  <div class="app-gallery" tabindex="0" aria-label="${SC} screenshots">${Object.keys(scShots).map((n, i) => `<figure data-reveal style="--i:${i}">${scShot(n, { sizes: "(max-width: 760px) 72vw, 280px" })}</figure>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="section-head" data-reveal><p class="eyebrow">What’s inside</p><h2>With you for the whole trip</h2></div>
+  <div class="app-features">${features.map(([icon, h, t], i) => `<div class="app-feature" data-reveal data-glow style="--i:${i}"><span class="cat-icon" aria-hidden="true">${icon}</span><h3>${h}</h3><p class="muted">${t}</p></div>`).join("")}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="partner" data-reveal data-glow>
+    <div>
+      <p class="eyebrow">Price</p>
+      <h2>Free to download.</h2>
+      <p class="muted">SOS, flight planning and in-flight help are free. SkyCalm Premium, a weekly, monthly or yearly subscription, unlocks the full Fly calmer course, 16 guided meditations, calm puzzle games and more breathing patterns.</p>
+      <p class="muted">${SC} is a wellness app. It isn’t medical advice and doesn’t replace care from a qualified professional.</p>
+      <div class="row">${scCta()}</div>
+    </div>
+    <ul class="app-help">
+      <li><a href="${SC_SITE}/support" target="_blank" rel="noopener">Support &amp; FAQs ${icons.arrow}</a></li>
+      <li><a href="${SC_SITE}/privacy" target="_blank" rel="noopener">Privacy Policy ${icons.arrow}</a></li>
+      <li><a href="${SC_SITE}/terms" target="_blank" rel="noopener">Terms of Use ${icons.arrow}</a></li>
     </ul>
   </div>
 </div></section>`,
@@ -1028,6 +1122,7 @@ const llms = `${llmsIntro}
 - [Sponsorships & contact](${abs("/contact/")}): contact form for sponsorships, partnerships and licensing
 - [${APP} app](${abs(APP_PATH)}): the Calming Audio sleep app for iPhone (${APP_URL ? "available now" : "coming soon"}); [support](${abs("/support/")}), [privacy](${abs("/privacy/")}), [terms](${abs("/terms/")})
 - [Moonhum app](${abs(MH_PATH)}): a free Calming Audio sleep-sounds app for iPhone (${MH_URL ? `[free on the App Store](${MH_URL})` : "coming soon"}) that collects no data; [support](${abs("/moonhum/support/")}), [privacy](${abs("/moonhum/privacy/")})
+- [SkyCalm app](${abs(SC_PATH)}): a free Calming Audio fear-of-flying app for iPhone (${SC_URL ? `[free on the App Store](${SC_URL})` : "coming soon"}) with hands-free panic help, a 7-day course and a turbulence outlook; its own site is [skycalm.net](${SC_SITE}/)
 - [YouTube channel](${YT_CHANNEL}): subscribe to ${config.siteName}
 
 ## Categories

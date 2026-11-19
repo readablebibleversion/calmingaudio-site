@@ -21,5 +21,9 @@
   },
   "moonhum": {
     "appStoreUrl": "https://apps.apple.com/us/app/moonhum-simple-sleep-sounds/id6834024807"
+  },
+  "skycalm": {
+    "appStoreUrl": "https://apps.apple.com/us/app/skycalm-fear-of-flying/id6746972686",
+    "site": "https://skycalm.net/"
   }
 }
